@@ -1,0 +1,13 @@
+@"
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+.env.*
+.vscode/
+.idea/
+*.log
+"@ | Set-Content .gitignore
+data/trinetra_before_*.db

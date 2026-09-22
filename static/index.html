@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        TriNetra | Project Intelligence
+    </title>
+
+    <!-- Main stylesheet -->
+    <link
+        rel="stylesheet"
+        href="/static/css/style.css"
+    >
+
+    <!-- Chart.js -->
+    <script
+        src="https://cdn.jsdelivr.net/npm/chart.js"
+    ></script>
+
+</head>
+
+
+<body>
+
+
+<!-- =========================================================
+     HEADER
+========================================================= -->
+
+<header class="topbar">
+
+    <div class="brand">
+
+        <div class="logo">
+            T
+        </div>
+
+        <div>
+
+            <h1>
+                TriNetra
+            </h1>
+
+            <p>
+                AI-Powered Infrastructure Project Intelligence
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div class="topbar-actions">
+
+    <button
+        id="adminLoginButton"
+        class="admin-login-button"
+        type="button"
+    >
+        Admin Login
+    </button>
+  
+
+
+
+<!-- =========================================================
+     ADMIN LOGIN MODAL
+========================================================= -->
+
+<div
+    id="adminLoginOverlay"
+    class="admin-overlay hidden"
+>
+
+    <div class="admin-modal admin-login-modal">
+
+        <div class="admin-modal-header">
+
+            <div>
+                <h2>TriNetra Admin Login</h2>
+
+                <p>
+                    Authorized project management access
+                </p>
+            </div>
+
+            <button
+                id="closeAdminLogin"
+                class="admin-close-button"
+                type="button"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <form id="adminLoginForm">
+
+            <div class="admin-form-group">
+
+                <label for="adminUsername">
+                    Username
+                </label>
+
+                <input
+                    id="adminUsername"
+                    type="text"
+                    autocomplete="username"
+                    required
+                >
+
+            </div>
+
+
+            <div class="admin-form-group">
+
+                <label for="adminPassword">
+                    Password
+                </label>
+
+                <input
+                    id="adminPassword"
+                    type="password"
+                    autocomplete="current-password"
+                    required
+                >
+
+            </div>
+
+
+            <div
+                id="adminLoginError"
+                class="admin-form-message error hidden"
+            ></div>
+
+
+            <button
+                type="submit"
+                class="admin-submit-button"
+            >
+                Sign In
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     ADMIN DASHBOARD
+========================================================= -->
+
+<div
+    id="adminDashboardOverlay"
+    class="admin-overlay hidden"
+>
+
+    <div class="admin-modal admin-dashboard-modal">
+
+        <div class="admin-modal-header">
+
+            <div>
+                <h2>TriNetra Admin Dashboard</h2>
+
+                <p>
+                    Manage project data and generate
+                    project intelligence.
+                </p>
+            </div>
+
+            <button
+                id="closeAdminDashboard"
+                class="admin-close-button"
+                type="button"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <!-- ADMIN ACTION CARDS -->
+
+        <div class="admin-dashboard-grid">
+
+            <!-- ADD / UPDATE -->
+
+            <button
+                id="adminAddProject"
+                class="admin-action-card"
+                type="button"
+            >
+
+                <div class="admin-action-icon">
+                    +
+                </div>
+
+                <div class="admin-action-content">
+
+                    <h3>
+                        Add / Update Project
+                    </h3>
+
+                    <p>
+                        Enter or update project information
+                        and calculate TriNetra risk intelligence.
+                    </p>
+
+                </div>
+
+            </button>
+
+
+            <!-- UPLOAD -->
+
+            <button
+                id="adminUploadData"
+                class="admin-action-card"
+                type="button"
+            >
+
+                <div class="admin-action-icon">
+                    ↑
+                </div>
+
+                <div class="admin-action-content">
+
+                    <h3>
+                        Upload Project Data
+                    </h3>
+
+                    <p>
+                        Import PAIMANA project data from
+                        XLSX or CSV files.
+                    </p>
+
+                </div>
+
+            </button>
+
+
+           
+
+            
+
+        </div>
+
+
+        <div class="admin-dashboard-footer">
+
+            <span class="admin-session-status">
+                ● Admin session active
+            </span>
+
+            <button
+                id="adminLogoutButton"
+                class="admin-logout-button"
+                type="button"
+            >
+                Logout
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     ADD / UPDATE PROJECT MODAL
+========================================================= -->
+
+<div
+    id="adminProjectFormOverlay"
+    class="admin-overlay hidden"
+>
+
+    <div class="admin-modal admin-project-modal">
+
+        <div class="admin-modal-header">
+
+            <div>
+                <h2>
+                    Add / Update Project
+                </h2>
+
+                <p>
+                    Enter source project data.
+                    TriNetra calculates derived intelligence automatically.
+                </p>
+            </div>
+
+            <button
+                id="closeAdminProjectForm"
+                class="admin-close-button"
+                type="button"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <form id="adminProjectForm">
+
+            <div class="admin-form-section">
+
+                <h3>
+                    Project Information
+                </h3>
+
+
+                <div class="admin-form-grid">
+
+                    <div class="admin-form-group">
+
+                        <label for="adminProjectId">
+                            Project ID *
+                        </label>
+
+                        <input
+                            id="adminProjectId"
+                            type="number"
+                            min="1"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="admin-form-group">
+
+                        <label for="adminReportMonth">
+                            Report Month *
+                        </label>
+
+                        <input
+                            id="adminReportMonth"
+                            type="month"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div
+                        class="admin-form-group admin-full-width"
+                    >
+
+                        <label for="adminProjectName">
+                            Project Name *
+                        </label>
+
+                        <input
+                            id="adminProjectName"
+                            type="text"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="admin-form-group">
+
+                        <label for="adminSector">
+                            Sector
+                        </label>
+
+                        <input
+                            id="adminSector"
+                            type="text"
+                        >
+
+                    </div>
+
+
+                    <div class="admin-form-group">
+
+                        <label for="adminMinistry">
+                            Line Ministry
+                        </label>
+
+                        <input
+                            id="adminMinistry"
+                            type="text"
+                        >
+
+                    </div>
+
+
+                    <div
+                        class="admin-form-group admin-full-width"
+                    >
+
+                        <label for="adminAgency">
+                            Implementing Agency
+                        </label>
+
+                        <input
+                            id="adminAgency"
+                            type="text"
+                        >
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- FINANCIAL / PHYSICAL -->
+
+            <div class="admin-form-section">
+
+                <h3>
+                    Financial & Physical Status
+                </h3>
+
+
+                <div class="admin-form-grid">
+
+                    <div class="admin-form-group">
+
+                        <label for="adminOriginalCost">
+                            Original Cost (₹ crore) *
+                        </label>
+
+                        <input
+                            id="adminOriginalCost"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="admin-form-group">
+
+                        <label for="adminRevisedCost">
+                            Revised Cost (₹ crore)
+                        </label>
+
+                        <input
+                            id="adminRevisedCost"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value="0"
+                        >
+
+                    </div>
+
+
+                    <div class="admin-form-group">
+
+                        <label for="adminExpenditure">
+                            Expenditure (₹ crore)
+                        </label>
+
+                        <input
+                            id="adminExpenditure"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value="0"
+                        >
+
+                    </div>
+
+
+                    <div class="admin-form-group">
+
+                        <label for="adminPhysicalProgress">
+                            Physical Progress (%)
+                        </label>
+
+                        <input
+                            id="adminPhysicalProgress"
+                            type="number"
+                            min="0"
+                            max="100"
+                            step="0.01"
+                            value="0"
+                        >
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- DATES -->
+
+            <div class="admin-form-section">
+
+                <h3>
+                    Project Dates
+                </h3>
+
+
+                <div class="admin-form-grid">
+
+                    <div class="admin-form-group">
+
+                        <label for="adminOriginalDoc">
+                            Original Date of Commissioning
+                        </label>
+
+                        <input
+                            id="adminOriginalDoc"
+                            type="date"
+                        >
+
+                    </div>
+
+
+                    <div class="admin-form-group">
+
+                        <label for="adminRevisedDoc">
+                            Revised Date of Commissioning
+                        </label>
+
+                        <input
+                            id="adminRevisedDoc"
+                            type="date"
+                        >
+
+                    </div>
+
+
+                    <div class="admin-form-group">
+
+                        <label for="adminSanctionDate">
+                            Sanction Date
+                        </label>
+
+                        <input
+                            id="adminSanctionDate"
+                            type="date"
+                        >
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div
+                id="adminProjectFormMessage"
+                class="admin-form-message hidden"
+            ></div>
+
+
+            <div class="admin-form-actions">
+
+                <button
+                    type="button"
+                    id="cancelAdminProjectForm"
+                    class="admin-secondary-button"
+                >
+                    Cancel
+                </button>
+
+                <button
+                    type="submit"
+                    class="admin-submit-button"
+                >
+                    Save Project
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+    
+
+</div>
+
+
+    <div class="connection-status">
+
+        <span
+            id="statusDot"
+            class="status-dot"
+        ></span>
+
+        <span id="connectionStatus">
+            Connecting...
+        </span>
+
+    </div>
+
+</div>
+
+</header>
+
+
+
+<!-- =========================================================
+     MAIN
+========================================================= -->
+
+<main class="main-container">
+
+
+    <!-- ERROR MESSAGE -->
+
+    <div
+        id="errorBox"
+        class="error-box hidden"
+    ></div>
+
+
+
+    <!-- =====================================================
+         SUMMARY CARDS
+    ====================================================== -->
+
+    <section class="summary-grid">
+
+
+        <div class="summary-card">
+
+            <div class="card-title">
+                Projects Monitored
+            </div>
+
+            <div
+                id="totalProjects"
+                class="card-value"
+            >
+                —
+            </div>
+
+            <div class="card-subtitle">
+                Latest project snapshot
+            </div>
+
+        </div>
+
+
+
+        <div class="summary-card">
+
+            <div class="card-title">
+                High Risk
+            </div>
+
+            <div
+                id="highRisk"
+                class="card-value risk-high-text"
+            >
+                —
+            </div>
+
+            <div class="card-subtitle">
+                Projects requiring attention
+            </div>
+
+        </div>
+
+
+
+        <div class="summary-card">
+
+            <div class="card-title">
+                Medium Risk
+            </div>
+
+            <div
+                id="mediumRisk"
+                class="card-value"
+            >
+                —
+            </div>
+
+            <div class="card-subtitle">
+                Projects under watch
+            </div>
+
+        </div>
+
+
+
+        <div class="summary-card">
+
+            <div class="card-title">
+                Latest Update
+            </div>
+
+            <div
+                id="latestMonth"
+                class="card-value date-value"
+            >
+                —
+            </div>
+
+            <div class="card-subtitle">
+                PAIMANA-derived data
+            </div>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =====================================================
+         PORTFOLIO OVERVIEW
+    ====================================================== -->
+
+    <section class="overview-grid">
+
+
+        <!-- RISK CHART -->
+
+        <div class="panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <h2>
+                        Portfolio Risk Distribution
+                    </h2>
+
+                    <p>
+                        Current project risk classification
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="chart-container">
+
+                <canvas
+                    id="riskChart"
+                ></canvas>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- TRINETRA PIPELINE -->
+
+        <div class="panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <h2>
+                        TriNetra Intelligence
+                    </h2>
+
+                    <p>
+                        From monitoring to early warning
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="intelligence-flow">
+
+
+                <div class="flow-item">
+
+                    <span class="flow-number">
+                        1
+                    </span>
+
+                    <div>
+                        <strong>
+                            Analyse project trajectory
+                        </strong>
+
+                        <small>
+                            Track changes over time
+                        </small>
+                    </div>
+
+                </div>
+
+
+
+                <div class="flow-item">
+
+                    <span class="flow-number">
+                        2
+                    </span>
+
+                    <div>
+                        <strong>
+                            Detect risk signals
+                        </strong>
+
+                        <small>
+                            Cost, expenditure and progress
+                        </small>
+                    </div>
+
+                </div>
+
+
+
+                <div class="flow-item">
+
+                    <span class="flow-number">
+                        3
+                    </span>
+
+                    <div>
+                        <strong>
+                            Predict deterioration
+                        </strong>
+
+                        <small>
+                            ML trajectory risk signal
+                        </small>
+                    </div>
+
+                </div>
+<div class="flow-item">
+
+                    <span class="flow-number">
+                        4
+                    </span>
+
+                    <div>
+                        <strong>
+                            Explain the risk
+                        </strong>
+
+                        <small>
+                            Identify key contributing factors
+                        </small>
+                    </div>
+
+                </div>
+
+
+
+                <div class="flow-item">
+
+                    <span class="flow-number">
+                        5
+                    </span>
+
+                    <div>
+                        <strong>
+                            Prioritize projects
+                        </strong>
+
+                        <small>
+                            Support early intervention
+                        </small>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =====================================================
+         PROJECT INTELLIGENCE
+    ====================================================== -->
+
+    <section class="panel project-panel">
+
+
+        <div class="panel-header">
+
+            <div>
+
+                <h2>
+                    Project Intelligence
+                </h2>
+
+                <p>
+                    Search and analyse the complete project portfolio
+                </p>
+
+            </div>
+
+
+            <div
+                id="resultCount"
+                class="result-count"
+            >
+                —
+            </div>
+
+        </div>
+
+
+
+        <!-- FILTERS -->
+
+        <div class="filters">
+
+
+            <div class="filter-search">
+
+                <input
+                    id="search"
+                    type="text"
+                    placeholder="Search project, ID or agency..."
+                >
+
+            </div>
+
+
+
+            <select id="riskFilter">
+
+                <option value="">
+                    All Risk Levels
+                </option>
+
+                <option value="High">
+                    High
+                </option>
+
+                <option value="Medium">
+                    Medium
+                </option>
+
+                <option value="Low">
+                    Low
+                </option>
+
+            </select>
+
+
+
+            <select id="trajectoryFilter">
+
+                <option value="">
+                    All Trajectories
+                </option>
+
+                <option value="Worsening">
+                    Worsening
+                </option>
+
+                <option value="Watch">
+                    Watch
+                </option>
+
+                <option value="Improving">
+                    Improving
+                </option>
+
+            </select>
+
+
+
+            <select id="priorityFilter">
+
+                <option value="">
+                    All Priorities
+                </option>
+
+                <option value="High">
+                    High
+                </option>
+
+                <option value="Medium">
+                    Medium
+                </option>
+
+                <option value="Low">
+                    Low
+                </option>
+
+            </select>
+
+
+
+            <select id="pageSize">
+
+                <option value="25">
+                    25 / page
+                </option>
+
+                <option value="50">
+                    50 / page
+                </option>
+
+                <option value="100">
+                    100 / page
+                </option>
+
+            </select>
+
+        </div>
+
+
+
+        <!-- TABLE -->
+
+        <div class="table-wrapper">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Project
+                        </th>
+
+                        <th>
+                            Agency
+                        </th>
+
+                        <th>
+                            Sector
+                        </th>
+
+                        <th>
+                            Original Cost
+                        </th>
+
+                        <th>
+                            Progress
+                        </th>
+
+                        <th>
+                            Cost Escalation
+                        </th>
+
+                        <th>
+                            Risk
+                        </th>
+
+                        <th>
+                            ML Risk
+                        </th>
+
+                        <th>
+                            Trajectory
+                        </th>
+
+                        <th>
+                            Priority
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody id="projectTable">
+
+                    <tr>
+
+                        <td
+                            colspan="10"
+                            class="loading-cell"
+                        >
+                            Loading projects...
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+
+        <!-- PAGINATION -->
+
+        <div class="pagination">
+
+
+            <div
+                id="pageInfo"
+                class="page-info"
+            >
+                —
+            </div>
+
+
+            <div class="page-buttons">
+
+                <button
+                    id="prevButton"
+                    type="button"
+                >
+                    ← Previous
+                </button>
+
+
+                <button
+                    id="nextButton"
+                    type="button"
+                >
+                    Next →
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+
+
+
+<!-- =========================================================
+     PROJECT DETAIL MODAL
+========================================================= -->
+
+<div
+    id="modalOverlay"
+    class="modal-overlay hidden"
+>
+
+    <div class="modal">
+
+
+        <div class="modal-header">
+
+            <div>
+
+                <h2 id="modalProjectName">
+                    Project
+                </h2>
+
+                <p id="modalProjectId">
+                    —
+                </p>
+                <div class="download-report-wrapper">
+
+    <button
+        id="downloadProjectReport"
+        class="download-report-button"
+        type="button"
+    >
+        ↓ Download Analysis ▾
+    </button>
+
+    <div
+        id="downloadReportMenu"
+        class="download-report-menu hidden"
+    >
+
+        <button
+            id="downloadPdfReport"
+            type="button"
+        >
+            📄 Download PDF Report
+        </button>
+
+        <button
+            id="downloadHtmlReport"
+            type="button"
+        >
+            🌐 Download HTML Report
+        </button>
+
+    </div>
+
+</div>
+
+            </div>
+
+
+            <button
+                id="closeModal"
+                class="close-button"
+                type="button"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+
+        <!-- PROJECT METRICS -->
+
+        <div
+            id="modalDetails"
+            class="details-grid"
+        ></div>
+
+
+
+        <!-- ML INFORMATION -->
+
+        <div class="ml-panel">
+
+            <div class="ml-panel-title">
+
+                <span>
+                    ML Trajectory Risk
+                </span>
+
+                <span
+                    id="modalMLRisk"
+                    class="ml-risk-value"
+                >
+                    —
+                </span>
+
+            </div>
+
+
+            <div class="risk-bar">
+
+                <div
+                    id="modalMLRiskBar"
+                    class="risk-bar-fill"
+                ></div>
+
+            </div>
+
+
+            <p class="ml-description">
+
+                Probability signal for next-month
+                trajectory deterioration based on
+                the current prototype model.
+
+            </p>
+
+        </div>
+
+
+
+        <!-- RISK DRIVERS -->
+
+        <div
+            id="modalDrivers"
+            class="drivers-box"
+        ></div>
+
+
+
+        <!-- TRAJECTORY -->
+
+        <div class="modal-section-header">
+
+            <div>
+
+                <h3>
+                    Project Trajectory
+                </h3>
+
+                <p>
+                    Historical progress and expenditure trajectory
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="trajectory-chart-container">
+
+            <canvas
+                id="trajectoryChart"
+            ></canvas>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- Main JavaScript -->
+
+<script
+    src="/static/js/app.js"
+></script>
+
+
+</body>
+
+</html>
