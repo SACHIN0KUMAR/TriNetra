@@ -9,3 +9,4 @@ reportlab>=4.0,<5
 shap>=0.45,<1
 joblib>=1.4,<2
 google-genai>=1.0,<3
+groq>=0.9.0,<2

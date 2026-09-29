@@ -2874,20 +2874,9 @@ def download_project_pdf(project_id: int):
     # PDF setup
     # --------------------------------------------------------
 
-    
-    pdfmetrics.registerFont(
-    TTFont(
-        "Arial",
-        r"C:\Windows\Fonts\arial.ttf"
-    )
-)
+    font_normal = "Helvetica"
+    font_bold = "Helvetica-Bold"
 
-    pdfmetrics.registerFont(
-    TTFont(
-        "Arial-Bold",
-        r"C:\Windows\Fonts\arialbd.ttf"
-    )
-)
     buffer = BytesIO()
     doc = SimpleDocTemplate(
         buffer,
@@ -2903,51 +2892,51 @@ def download_project_pdf(project_id: int):
 
 
     title_style = ParagraphStyle(
-    "TriNetraTitle",
-    parent=styles["Title"],
-    fontName="Arial-Bold",
-    fontSize=22,
-    leading=26,
-    alignment=TA_CENTER,
-    spaceAfter=6
-)
+        "TriNetraTitle",
+        parent=styles["Title"],
+        fontName=font_bold,
+        fontSize=22,
+        leading=26,
+        alignment=TA_CENTER,
+        spaceAfter=6
+    )
 
 
     subtitle_style = ParagraphStyle(
-    "TriNetraSubtitle",
-    parent=styles["Normal"],
-    fontName="Arial",
-    fontSize=9,
-    textColor=colors.grey,
-    alignment=TA_CENTER,
-    spaceAfter=16
-)
+        "TriNetraSubtitle",
+        parent=styles["Normal"],
+        fontName=font_normal,
+        fontSize=9,
+        textColor=colors.grey,
+        alignment=TA_CENTER,
+        spaceAfter=16
+    )
 
     heading_style = ParagraphStyle(
-    "SectionHeading",
-    parent=styles["Heading2"],
-    fontName="Arial-Bold",
-    fontSize=14,
-    leading=18,
-    spaceBefore=10,
-    spaceAfter=8
-)
+        "SectionHeading",
+        parent=styles["Heading2"],
+        fontName=font_bold,
+        fontSize=14,
+        leading=18,
+        spaceBefore=10,
+        spaceAfter=8
+    )
 
     normal_style = ParagraphStyle(
-    "NormalSmall",
-    parent=styles["Normal"],
-    fontName="Arial",
-    fontSize=9,
-    leading=12
-)
+        "NormalSmall",
+        parent=styles["Normal"],
+        fontName=font_normal,
+        fontSize=9,
+        leading=12
+    )
 
     small_style = ParagraphStyle(
-    "Small",
-    parent=styles["Normal"],
-    fontName="Arial",
-    fontSize=8,
-    leading=10
-)
+        "Small",
+        parent=styles["Normal"],
+        fontName=font_normal,
+        fontSize=8,
+        leading=10
+    )
 
 
     # --------------------------------------------------------
@@ -3159,14 +3148,14 @@ def download_project_pdf(project_id: int):
                 "FONTNAME",
                 (0, 0),
                 (-1, -1),
-                "Arial"
+                font_normal
             ),
 
             (
                 "FONTNAME",
                 (0, 0),
                 (0, -1),
-                "Arial-Bold"
+                font_bold
             ),
 
             (
@@ -3280,7 +3269,7 @@ def download_project_pdf(project_id: int):
                 "FONTNAME",
                 (0, 0),
                 (0, -1),
-                "Arial-Bold"
+                font_bold
             ),
 
             (
@@ -3406,7 +3395,7 @@ def download_project_pdf(project_id: int):
                 "FONTNAME",
                 (0, 0),
                 (0, -1),
-                "Arial-Bold"
+                font_bold
             ),
 
             (
@@ -3637,7 +3626,7 @@ def download_project_pdf(project_id: int):
                     "FONTNAME",
                     (0, 0),
                     (-1, 0),
-                    "Arial-Bold"
+                    font_bold
                 ),
 
                 (
@@ -3786,7 +3775,7 @@ def download_project_pdf(project_id: int):
                     "FONTNAME",
                     (0, 0),
                     (-1, 0),
-                    "Arial-Bold"
+                    font_bold
                 ),
 
                 (
@@ -4029,11 +4018,78 @@ def assistant(req: AssistantRequest):
     if not context:
         raise HTTPException(status_code=404, detail="Project not found")
 
-    gemini_key = os.getenv("GEMINI_API_KEY", "")
+    def _clean_key(raw_val: str) -> str:
+        if not raw_val:
+            return ""
+        s = raw_val.strip()
+        if "=" in s:
+            s = s.split("=", 1)[1].strip()
+        return s.strip("'\" \t\r\n")
+
+    # 1. Check for Groq API key (Environment or File)
+    groq_key = _clean_key(os.getenv("GROQ_API_KEY", ""))
+    if not groq_key and os.path.exists("groq_key.txt"):
+        try:
+            with open("groq_key.txt", "r") as f:
+                groq_key = _clean_key(f.read())
+        except Exception:
+            pass
+
+    # Also check api_key.txt if it contains a Groq key (starts with 'gsk_')
+    if not groq_key and os.path.exists("api_key.txt"):
+        try:
+            with open("api_key.txt", "r") as f:
+                content = _clean_key(f.read())
+                if content.startswith("gsk_"):
+                    groq_key = content
+        except Exception:
+            pass
+
+    # -- Groq path (Fastest cloud LLM inference) --
+    if groq_key:
+        try:
+            from groq import Groq
+            client = Groq(api_key=groq_key)
+            models = [
+                "qwen/qwen3.8-27b",
+                "llama-3.3-70b-versatile",
+                "llama-3.1-8b-instant",
+                "openai/gpt-oss-120b",
+                "openai/gpt-oss-20b"
+            ]
+            last_err = None
+            for m in models:
+                try:
+                    chat_completion = client.chat.completions.create(
+                        messages=[
+                            {"role": "system", "content": SYSTEM_PROMPT},
+                            {"role": "user", "content": f"{context}\n\nUSER QUESTION: {req.question}"}
+                        ],
+                        model=m,
+                        max_tokens=400,
+                        temperature=0.3
+                    )
+                    ans = chat_completion.choices[0].message.content
+                    if ans:
+                        return {"answer": ans, "backend": f"groq:{m}"}
+                except Exception as model_err:
+                    last_err = model_err
+            if last_err:
+                print("Groq API Error:", last_err)
+        except Exception as e:
+            print("Groq Client Error:", e)
+
+    # 2. Check for Gemini API key
+    gemini_key = _clean_key(os.getenv("GEMINI_API_KEY", ""))
     
     if not gemini_key and os.path.exists("api_key.txt"):
-        with open("api_key.txt", "r") as f:
-            gemini_key = f.read().strip()
+        try:
+            with open("api_key.txt", "r") as f:
+                content = _clean_key(f.read())
+                if not content.startswith("gsk_"):
+                    gemini_key = content
+        except Exception:
+            pass
 
     # -- Gemini path --
     if gemini_key:

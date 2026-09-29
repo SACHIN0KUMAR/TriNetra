@@ -12,28 +12,46 @@ ENV/
 env/
 .env/
 
-# Environment variables & sensitive keys
+# Environment variables & sensitive credentials
 .env
 .env.*
 api_key.txt
 api_key*.txt
+groq_key.txt
+groq_key*.txt
+*token*.txt
+*secret*.txt
+credentials.json
 *.key
 *.pem
 
-# Database backups & temporary files (keep data/trinetra.db)
+# Database backups & temporary database files
 data/trinetra_before_*.db
-data/projects.db
 data/*backup*.db
 data/*.bak
 data/*.tmp
 data/*.sqlite-journal
 *.db-journal
 
-# Temporary / Scratch caches & logs
+# Keep core production database and ML models tracked
+!data/trinetra.db
+!models/*.pkl
+
+# Temporary, scratch caches & test logs
 static/dashboard-data.json
 scratch/
+tmp/
+temp/
 *.log
 logs/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Build & packaging
+dist/
+build/
+*.egg-info/
 
 # Operating System files
 .DS_Store
@@ -43,6 +61,7 @@ logs/
 .Trashes
 ehthumbs.db
 Thumbs.db
+[Dd]esktop.ini
 
 # IDE & Editor files
 .vscode/

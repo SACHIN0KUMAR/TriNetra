@@ -1922,21 +1922,45 @@ const pdfButton =
 
 if (pdfButton) {
 
-    pdfButton.onclick = () => {
+    pdfButton.onclick = async (e) => {
+        if (e) e.stopPropagation();
+        const pid = project.project_id || (window.currentReportProject && window.currentReportProject.project_id);
+        if (!pid) {
+            alert("No project selected for download.");
+            return;
+        }
 
-        window.open(
-            `/api/projects/${encodeURIComponent(
-                project.project_id
-            )}/report/pdf`,
-            "_blank"
-        );
+        const originalText = pdfButton.innerHTML;
+        pdfButton.innerHTML = "⏳ Generating PDF...";
+        pdfButton.disabled = true;
 
-        document
-            .getElementById(
-                "downloadReportMenu"
-            )
-            ?.classList.add("hidden");
+        try {
+            const response = await fetch(`/api/projects/${encodeURIComponent(pid)}/report/pdf`);
+            if (!response.ok) {
+                throw new Error(`Server returned HTTP ${response.status}`);
+            }
 
+            const blob = await response.blob();
+            const blobUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.style.display = "none";
+            a.href = blobUrl;
+            a.download = `TriNetra_Project_${pid}_Analysis.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(blobUrl);
+            }, 300);
+        } catch (err) {
+            console.error("PDF download failed:", err);
+            // Fallback to direct download navigation
+            window.location.href = `/api/projects/${encodeURIComponent(pid)}/report/pdf`;
+        } finally {
+            pdfButton.innerHTML = originalText;
+            pdfButton.disabled = false;
+            document.getElementById("downloadReportMenu")?.classList.add("hidden");
+        }
     };
 
 }
@@ -4683,12 +4707,21 @@ function aiResetChat() {
         </div>`;
 }
 
+function aiFormatText(text) {
+    if (!text) return "";
+    let safe = escapeHtml(text);
+    safe = safe.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    safe = safe.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    safe = safe.replace(/\n/g, '<br>');
+    return safe;
+}
+
 function aiAppendMessage(text, role) {
     const msgs = document.getElementById("aiMessages");
     if (!msgs) return;
     const div = document.createElement("div");
     div.className = `ai-message ai-message--${role}`;
-    div.innerHTML = `<div class="ai-message-text">${escapeHtml(text)}</div>`;
+    div.innerHTML = `<div class="ai-message-text">${role === 'bot' ? aiFormatText(text) : escapeHtml(text)}</div>`;
     msgs.appendChild(div);
     msgs.scrollTop = msgs.scrollHeight;
     return div;
@@ -4741,7 +4774,18 @@ async function aiAsk(question) {
             // Show which backend responded
             const meta = document.createElement("div");
             meta.className = "ai-message-meta";
-            meta.textContent = `Powered by ${data.backend === "gemini" ? "Gemini AI" : "Ollama (local)"}`;
+            let backendLabel = "AI Assistant";
+            if (data.backend && data.backend.startsWith("groq")) {
+                const model = data.backend.split(":")[1] || "Llama 3";
+                backendLabel = `⚡ Groq (${model.replace("llama-3.3-70b-versatile", "Llama 3.3 70B").replace("llama-3.1-8b-instant", "Llama 3.1 8B")})`;
+            } else if (data.backend === "gemini") {
+                backendLabel = "✨ Google Gemini AI";
+            } else if (data.backend === "ollama") {
+                backendLabel = "🦙 Ollama (local)";
+            } else if (data.backend === "analytical_engine") {
+                backendLabel = "📊 TriNetra Analytical Engine";
+            }
+            meta.textContent = `Powered by ${backendLabel}`;
             botDiv.appendChild(meta);
         }
     } catch (e) {
