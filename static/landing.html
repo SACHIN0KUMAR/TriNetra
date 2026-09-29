@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TriNetra - Landing</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .hero {
+            min-height: 100vh;
+            background: linear-gradient(rgba(12, 30, 16, 0.7), rgba(12, 30, 16, 0.7)), url("https://images.unsplash.com/photo-1541888081622-49176378e0ea?q=80&w=2070&auto=format&fit=crop") no-repeat center center/cover;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+            padding: 100px 20px 40px;
+        }
+        .hero h1 {
+            font-size: 56px;
+            font-weight: 800;
+            margin-bottom: 20px;
+            letter-spacing: -1px;
+        }
+        .hero > p {
+            font-size: 20px;
+            font-weight: 400;
+            margin-bottom: 40px;
+            max-width: 700px;
+            color: rgba(255,255,255,0.9);
+            line-height: 1.6;
+        }
+        .hero-stats {
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 50px;
+            opacity: 0;
+            transition: opacity 0.8s;
+        }
+        .hero-stats .stat-item { text-align: center; }
+        .hero-stats .stat-num {
+            font-size: 42px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            line-height: 1;
+        }
+        .hero-stats .stat-label {
+            font-size: 11px;
+            color: rgba(255,255,255,0.65);
+            margin-top: 6px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+        .hero-stats .divider {
+            width: 1px;
+            background: rgba(255,255,255,0.2);
+            margin: 4px 0;
+            align-self: stretch;
+        }
+        .nav-cards {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .nav-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 16px;
+            padding: 40px;
+            width: 350px;
+            text-align: center;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .nav-card:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-5px);
+            border-color: #fff;
+        }
+        .nav-card svg {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 20px;
+            fill: currentColor;
+        }
+        .nav-card h3 {
+            font-size: 24px;
+            margin-bottom: 12px;
+            font-weight: 700;
+        }
+        .nav-card p {
+            font-size: 15px;
+            margin-bottom: 0;
+            color: rgba(255,255,255,0.8);
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <header class="topbar" style="position: absolute; width: 100%; box-sizing: border-box; background: rgba(12, 30, 16, 0.4); box-shadow: none; border-bottom: 1px solid rgba(255,255,255,0.1);">
+        <div class="brand">
+            <div class="logo">T</div>
+            <div>
+                <h1>TriNetra</h1>
+                <p>National Infrastructure Growth & Development Intelligence</p>
+            </div>
+        </div>
+        <nav class="main-nav">
+            <a href="/" class="active">Home</a>
+            <a href="/dashboard">Public Dashboard</a>
+            <a href="/projects">Project Monitoring</a>
+        </nav>
+        <div class="topbar-actions"></div>
+    </header>
+
+    <div class="hero">
+        <h1>TriNetra Project Intelligence</h1>
+        <p>National Infrastructure Growth & Development Monitoring.<br>Central Sector Infrastructure Projects Costing Rs. 150 crore & above.</p>
+
+        <div class="hero-stats" id="heroStats">
+            <div class="stat-item">
+                <div class="stat-num" id="statCount">—</div>
+                <div class="stat-label">Total Projects</div>
+            </div>
+            <div class="divider"></div>
+            <div class="stat-item">
+                <div class="stat-num" id="statCost">—</div>
+                <div class="stat-label">Original Cost (₹ cr)</div>
+            </div>
+            <div class="divider"></div>
+            <div class="stat-item">
+                <div class="stat-num" id="statExp">—</div>
+                <div class="stat-label">Expenditure (₹ cr)</div>
+            </div>
+            <div class="divider"></div>
+            <div class="stat-item">
+                <div class="stat-num" id="statHigh" style="color:#fca5a5;">—</div>
+                <div class="stat-label">High Risk Projects</div>
+            </div>
+        </div>
+
+        <div class="nav-cards">
+            <a href="/dashboard" class="nav-card">
+                <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+                <h3>Public Dashboard</h3>
+                <p>View overall metrics, sector-wise distribution, cost overview, and physical progress of all projects.</p>
+            </a>
+            <a href="/projects" class="nav-card">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                <h3>Project Monitoring</h3>
+                <p>AI-powered deep dive into individual project risks, cost/time overruns, and LLM Assistant.</p>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        function fmtLakh(n) {
+            if (n >= 1e5) return (n / 1e5).toFixed(1) + "L";
+            return new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(n);
+        }
+        fetch("/api/dashboard_data")
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById("statCount").innerText = new Intl.NumberFormat("en-IN").format(data.kpi.project_count);
+                document.getElementById("statCost").innerText = fmtLakh(data.kpi.original_cost);
+                document.getElementById("statExp").innerText = fmtLakh(data.kpi.expenditure);
+                document.getElementById("statHigh").innerText = data.risk_dist.High;
+                document.getElementById("heroStats").style.opacity = "1";
+            })
+            .catch(() => {});
+    </script>
+</body>
+</html>

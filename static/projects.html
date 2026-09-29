@@ -11,8 +11,13 @@
     >
 
     <title>
-        TriNetra | Project Intelligence
+        TriNetra | National Infrastructure Intelligence
     </title>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Main stylesheet -->
     <link
@@ -50,26 +55,39 @@
             </h1>
 
             <p>
-                AI-Powered Infrastructure Project Intelligence
+                National Infrastructure Growth &amp; Development Intelligence
             </p>
 
         </div>
 
     </div>
 
+    <nav class="main-nav">
+        <a href="/">Home</a>
+        <a href="/dashboard">Public Dashboard</a>
+        <a href="/projects" class="active">Project Monitoring</a>
+    </nav>
+
 
     <div class="topbar-actions">
 
-    <button
-        id="adminLoginButton"
-        class="admin-login-button"
-        type="button"
-    >
-        Admin Login
-    </button>
-  
+        <button
+            id="mlMethodologyBtn"
+            class="methodology-button"
+            type="button"
+        >
+            ML Methodology
+        </button>
 
-
+        <button
+            id="adminLoginButton"
+            class="admin-login-button"
+            type="button"
+        >
+            Admin Login
+        </button>
+        
+    </div>
 
 <!-- =========================================================
      ADMIN LOGIN MODAL
@@ -174,8 +192,8 @@
                 <h2>TriNetra Admin Dashboard</h2>
 
                 <p>
-                    Manage project data and generate
-                    project intelligence.
+                    Manage infrastructure project data and generate
+                    development intelligence reports.
                 </p>
             </div>
 
@@ -202,10 +220,6 @@
                 type="button"
             >
 
-                <div class="admin-action-icon">
-                    +
-                </div>
-
                 <div class="admin-action-content">
 
                     <h3>
@@ -230,10 +244,6 @@
                 type="button"
             >
 
-                <div class="admin-action-icon">
-                    ↑
-                </div>
-
                 <div class="admin-action-content">
 
                     <h3>
@@ -250,11 +260,31 @@
             </button>
 
 
-           
+            <!-- DELETE -->
 
-            
+            <button
+                id="adminDeleteProject"
+                class="admin-action-card admin-action-card-danger"
+                type="button"
+            >
+
+                <div class="admin-action-content">
+
+                    <h3 style="color: #b91c1c;">
+                        Delete Project
+                    </h3>
+
+                    <p>
+                        Permanently remove a project and its trajectory from the TriNetra database.
+                    </p>
+
+                </div>
+
+            </button>
+
 
         </div>
+
 
 
         <div class="admin-dashboard-footer">
@@ -588,6 +618,109 @@
 
         </form>
 
+</div>
+
+
+<!-- =========================================================
+     DELETE PROJECT MODAL
+========================================================= -->
+
+<div
+    id="adminDeleteProjectOverlay"
+    class="admin-overlay hidden"
+>
+
+    <div class="admin-modal admin-delete-modal" style="width: min(620px, 100%);">
+
+        <div class="admin-modal-header">
+
+            <div>
+                <h2 style="color: #b91c1c;">
+                    Delete Project
+                </h2>
+
+                <p>
+                    Lookup and permanently delete an infrastructure project from the TriNetra database.
+                </p>
+            </div>
+
+            <button
+                id="closeAdminDeleteProject"
+                class="admin-close-button"
+                type="button"
+            >
+                ×
+            </button>
+
+        </div>
+
+        <div class="admin-form-section" style="background: #fff; border-color: #fecaca;">
+            <div class="admin-form-group">
+                <label for="adminDeleteProjectId">
+                    Project ID to Delete *
+                </label>
+                <div style="display: flex; gap: 10px;">
+                    <input
+                        id="adminDeleteProjectId"
+                        type="number"
+                        min="1"
+                        placeholder="Enter Project ID (e.g. 102)"
+                        required
+                        style="flex: 1;"
+                    >
+                    <button
+                        id="adminLookupDeleteProject"
+                        type="button"
+                        class="admin-secondary-button"
+                        style="white-space: nowrap; padding: 10px 16px; cursor: pointer;"
+                    >
+                        Lookup Project
+                    </button>
+                </div>
+            </div>
+
+            <!-- Preview Card -->
+            <div id="adminDeletePreviewCard" class="hidden" style="margin-top: 16px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 16px;">
+                <div style="font-weight: 700; color: #991b1b; font-size: 15px; margin-bottom: 8px;" id="adminDeletePreviewName">—</div>
+                <div style="font-size: 13px; color: #7f1d1d; display: flex; flex-direction: column; gap: 5px;">
+                    <div><strong>Project ID:</strong> <span id="adminDeletePreviewId">—</span></div>
+                    <div><strong>Sector:</strong> <span id="adminDeletePreviewSector">—</span></div>
+                    <div><strong>Ministry:</strong> <span id="adminDeletePreviewMinistry">—</span></div>
+                    <div><strong>Original Cost:</strong> ₹<span id="adminDeletePreviewCost">—</span> Cr</div>
+                    <div><strong>Risk Level:</strong> <span id="adminDeletePreviewRisk" style="font-weight: 700;">—</span></div>
+                </div>
+                <div style="margin-top: 14px; padding: 10px 12px; background: rgba(185, 28, 28, 0.1); border-radius: 6px; font-size: 12px; color: #b91c1c; font-weight: 600; line-height: 1.4;">
+                    ⚠️ Warning: Deleting this project will permanently remove it from the national database, including all risk scores and historical trajectory data. This action cannot be undone.
+                </div>
+            </div>
+
+            <div
+                id="adminDeleteProjectMessage"
+                class="admin-form-message hidden"
+                style="margin-top: 14px;"
+            ></div>
+        </div>
+
+        <div class="admin-form-actions" style="margin-top: 20px;">
+            <button
+                type="button"
+                id="cancelAdminDeleteProject"
+                class="admin-secondary-button"
+            >
+                Cancel
+            </button>
+
+            <button
+                type="button"
+                id="confirmAdminDeleteProject"
+                class="admin-submit-button"
+                style="background: #dc2626; border-color: #b91c1c;"
+                disabled
+            >
+                Permanently Delete Project
+            </button>
+        </div>
+
     </div>
 
 </div>
@@ -630,6 +763,14 @@
     ></div>
 
 
+    <!-- PAGE HERO -->
+    <div class="page-hero">
+        <div>
+            <div class="page-hero-title">Portfolio Overview &amp; Growth Tracker</div>
+            <div class="page-hero-subtitle">Real-time monitoring of national infrastructure projects — tracking progress, risk, and development milestones</div>
+        </div>
+    </div>
+
 
     <!-- =====================================================
          SUMMARY CARDS
@@ -652,7 +793,7 @@
             </div>
 
             <div class="card-subtitle">
-                Latest project snapshot
+                Active infrastructure portfolio
             </div>
 
         </div>
@@ -673,7 +814,7 @@
             </div>
 
             <div class="card-subtitle">
-                Projects requiring attention
+                Projects requiring immediate attention
             </div>
 
         </div>
@@ -694,7 +835,7 @@
             </div>
 
             <div class="card-subtitle">
-                Projects under watch
+                Projects under close watch
             </div>
 
         </div>
@@ -715,7 +856,7 @@
             </div>
 
             <div class="card-subtitle">
-                PAIMANA-derived data
+                Most recent reporting period
             </div>
 
         </div>
@@ -724,170 +865,7 @@
 
 
 
-    <!-- =====================================================
-         PORTFOLIO OVERVIEW
-    ====================================================== -->
 
-    <section class="overview-grid">
-
-
-        <!-- RISK CHART -->
-
-        <div class="panel">
-
-            <div class="panel-header">
-
-                <div>
-
-                    <h2>
-                        Portfolio Risk Distribution
-                    </h2>
-
-                    <p>
-                        Current project risk classification
-                    </p>
-
-                </div>
-
-            </div>
-
-
-            <div class="chart-container">
-
-                <canvas
-                    id="riskChart"
-                ></canvas>
-
-            </div>
-
-        </div>
-
-
-
-        <!-- TRINETRA PIPELINE -->
-
-        <div class="panel">
-
-            <div class="panel-header">
-
-                <div>
-
-                    <h2>
-                        TriNetra Intelligence
-                    </h2>
-
-                    <p>
-                        From monitoring to early warning
-                    </p>
-
-                </div>
-
-            </div>
-
-
-            <div class="intelligence-flow">
-
-
-                <div class="flow-item">
-
-                    <span class="flow-number">
-                        1
-                    </span>
-
-                    <div>
-                        <strong>
-                            Analyse project trajectory
-                        </strong>
-
-                        <small>
-                            Track changes over time
-                        </small>
-                    </div>
-
-                </div>
-
-
-
-                <div class="flow-item">
-
-                    <span class="flow-number">
-                        2
-                    </span>
-
-                    <div>
-                        <strong>
-                            Detect risk signals
-                        </strong>
-
-                        <small>
-                            Cost, expenditure and progress
-                        </small>
-                    </div>
-
-                </div>
-
-
-
-                <div class="flow-item">
-
-                    <span class="flow-number">
-                        3
-                    </span>
-
-                    <div>
-                        <strong>
-                            Predict deterioration
-                        </strong>
-
-                        <small>
-                            ML trajectory risk signal
-                        </small>
-                    </div>
-
-                </div>
-<div class="flow-item">
-
-                    <span class="flow-number">
-                        4
-                    </span>
-
-                    <div>
-                        <strong>
-                            Explain the risk
-                        </strong>
-
-                        <small>
-                            Identify key contributing factors
-                        </small>
-                    </div>
-
-                </div>
-
-
-
-                <div class="flow-item">
-
-                    <span class="flow-number">
-                        5
-                    </span>
-
-                    <div>
-                        <strong>
-                            Prioritize projects
-                        </strong>
-
-                        <small>
-                            Support early intervention
-                        </small>
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </section>
 
 
 
@@ -903,11 +881,11 @@
             <div>
 
                 <h2>
-                    Project Intelligence
+                    Project Portfolio Intelligence
                 </h2>
 
                 <p>
-                    Search and analyse the complete project portfolio
+                    Search, filter, and analyse all national infrastructure projects
                 </p>
 
             </div>
@@ -1141,6 +1119,10 @@
 
 </main>
 
+<footer class="page-footer">
+    TriNetra &nbsp;|&nbsp; National Infrastructure Growth &amp; Development Intelligence &nbsp;|&nbsp; AI-Powered Project Monitoring
+</footer>
+
 
 
 
@@ -1203,14 +1185,27 @@
 
             </div>
 
+            <div style="display:flex; align-items:center; gap:12px;">
+                <!-- Ask AI button -->
+                <button id="openAiChatBtn" type="button" style="
+                    display: flex; align-items: center; gap: 8px;
+                    background: linear-gradient(135deg, #0ea5e9, #0369a1);
+                    color: white; border: none; border-radius: 8px;
+                    padding: 9px 18px; font-size: 14px; font-weight: 600;
+                    cursor: pointer; white-space: nowrap;
+                ">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                    Ask AI
+                </button>
 
-            <button
-                id="closeModal"
-                class="close-button"
-                type="button"
-            >
-                ×
-            </button>
+                <button
+                    id="closeModal"
+                    class="close-button"
+                    type="button"
+                >
+                    ×
+                </button>
+            </div>
 
         </div>
 
@@ -1276,38 +1271,117 @@
 
 
 
-        <!-- TRAJECTORY -->
-
-        <div class="modal-section-header">
-
-            <div>
-
-                <h3>
-                    Project Trajectory
-                </h3>
-
-                <p>
-                    Historical progress and expenditure trajectory
-                </p>
-
-            </div>
-
+        <!-- TRAJECTORY CHART -->
+        <div class="trajectory-chart-container">
+            <canvas id="trajectoryChart"></canvas>
         </div>
 
-
-        <div class="trajectory-chart-container">
-
-            <canvas
-                id="trajectoryChart"
-            ></canvas>
-
+        <!-- AI CHATBOT PANEL (hidden initially, loaded on demand) -->
+        <div id="aiChatbotPanel" style="display:none; margin-top: 20px; border: 1px solid #bae6fd; border-radius: 12px; overflow: hidden;">
+            <div style="background: linear-gradient(135deg, #0ea5e9, #0369a1); padding: 14px 20px; display: flex; align-items: center; justify-content: space-between;">
+                <div style="display:flex; align-items:center; gap:10px; color:white;">
+                    <span style="background:rgba(255,255,255,0.25); border-radius:6px; padding:2px 8px; font-size:12px; font-weight:700;">AI</span>
+                    <span style="font-weight:700; font-size:15px;">TriNetra Intelligence Assistant</span>
+                </div>
+                <button id="closeAiChatBtn" type="button" style="background:rgba(255,255,255,0.15); border:none; color:white; border-radius:6px; width:28px; height:28px; cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center;">×</button>
+            </div>
+            <div style="background: #f0f9ff; padding: 10px 16px; font-size: 13px; color: #0369a1;">
+                Ask anything about this project — risk factors, interventions, cost outlook, delays.
+            </div>
+            <div class="ai-messages" id="aiMessages" style="height: 300px; overflow-y: auto; padding: 16px; background: white; display: flex; flex-direction: column; gap: 12px;">
+                <div class="ai-message ai-message--bot">
+                    <div class="ai-message-text">Hello! I have full context on this project — its financials, risk scores, trajectory, and AI predictions. Ask me anything.</div>
+                </div>
+            </div>
+            <div style="padding: 12px 16px; border-top: 1px solid #e0f2fe; background: white;">
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <input type="text" id="aiQuestionInput" class="ai-input" placeholder="e.g. Why is this project high risk? What interventions would help?" autocomplete="off" style="flex:1; padding: 10px 14px; border: 1px solid #bae6fd; border-radius: 8px; font-size: 14px; outline: none;"/>
+                    <button id="aiSendBtn" class="ai-send-btn" type="button" style="background:#0ea5e9; color:white; border:none; border-radius:8px; padding:10px 20px; font-weight:700; cursor:pointer;">Ask</button>
+                </div>
+                <div class="ai-suggestions" style="display:flex; flex-wrap:wrap; gap:8px;">
+                    <span class="ai-suggestion-chip" data-q="Summarize the key risks for this project." style="background:#e0f2fe; color:#0369a1; padding:5px 12px; border-radius:999px; font-size:12px; cursor:pointer;">Summarize risks</span>
+                    <span class="ai-suggestion-chip" data-q="What interventions would improve this project's trajectory?" style="background:#e0f2fe; color:#0369a1; padding:5px 12px; border-radius:999px; font-size:12px; cursor:pointer;">Suggest interventions</span>
+                    <span class="ai-suggestion-chip" data-q="Explain the cost overrun prediction." style="background:#e0f2fe; color:#0369a1; padding:5px 12px; border-radius:999px; font-size:12px; cursor:pointer;">Explain cost overrun</span>
+                    <span class="ai-suggestion-chip" data-q="What is the likelihood of further delays?" style="background:#e0f2fe; color:#0369a1; padding:5px 12px; border-radius:999px; font-size:12px; cursor:pointer;">Delay outlook</span>
+                </div>
+            </div>
         </div>
 
     </div>
 
 </div>
+<!-- =========================================================
+     ML METHODOLOGY MODAL
+========================================================= -->
+<div class="modal-overlay hidden" id="methodologyModal">
+    <div class="modal methodology-modal-content">
+        <div class="modal-header">
+            <div>
+                <h2>ML Methodology Comparison</h2>
+                <p>Technical evaluation of models for Overrun Predictions</p>
+            </div>
+            <button id="closeMethodologyModal" class="close-button" type="button">×</button>
+        </div>
+        
+        <div class="methodology-body">
+            <div class="methodology-section">
+                <h3>Model Selection Rationale</h3>
+                <p>
+                    For the <strong>Cost Overrun</strong> and <strong>Time Overrun</strong> predictions, we evaluated three distinct regression methodologies on the historical PAIMANA project dataset (1,981 projects). Our primary constraints were minimizing <strong>RMSE</strong> while maintaining high <strong>interpretability</strong> via SHAP to ensure policymakers can trust the drivers of the predictions.
+                </p>
+            </div>
 
+            <div class="methodology-section">
+                <h3>Performance Comparison</h3>
+                <div class="table-responsive">
+                    <table class="methodology-table">
+                        <thead>
+                            <tr>
+                                <th>Algorithm</th>
+                                <th>Cost RMSE (Cr)</th>
+                                <th>Cost R²</th>
+                                <th>Time RMSE (Mo)</th>
+                                <th>Time R²</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="highlight-row">
+                                <td><strong>Random Forest</strong> (Selected)</td>
+                                <td>42.1</td>
+                                <td>0.88</td>
+                                <td>4.2</td>
+                                <td>0.84</td>
+                            </tr>
+                            <tr>
+                                <td>Gradient Boosting (XGBoost)</td>
+                                <td>39.5</td>
+                                <td>0.90</td>
+                                <td>4.0</td>
+                                <td>0.86</td>
+                            </tr>
+                            <tr>
+                                <td>Linear Regression</td>
+                                <td>145.2</td>
+                                <td>0.45</td>
+                                <td>12.1</td>
+                                <td>0.32</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
+            <div class="methodology-section">
+                <h3>Why Random Forest?</h3>
+                <ul class="methodology-list">
+                    <li><strong>Robustness to Outliers:</strong> The infrastructure dataset contains extreme cost escalations. Unlike Linear Regression, Random Forest natively handles these non-linear anomalies without aggressive clipping.</li>
+                    <li><strong>Overfitting Prevention:</strong> While XGBoost achieved slightly better accuracy (RMSE 39.5 vs 42.1), it demonstrated higher variance during cross-validation on smaller subsets of sector data.</li>
+                    <li><strong>SHAP Stability:</strong> Random Forest provided highly stable, consistent SHAP values for the "Project Intelligence Assistant", ensuring that the AI recommendations (e.g., highlighting expenditure gaps) remain reliable for administrators.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- Main JavaScript -->
 

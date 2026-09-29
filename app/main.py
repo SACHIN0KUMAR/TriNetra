@@ -1,6 +1,7 @@
 from pathlib import Path
 import sqlite3
 import threading
+import pickle
 
 import joblib
 import numpy as np
@@ -65,6 +66,17 @@ app = FastAPI(
     title="TriNetra API",
     version="1.0.0"
 )
+
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # ============================================================
 # ADMIN AUTHENTICATION
 # ============================================================
@@ -859,16 +871,76 @@ def admin_add_or_update_project(
     finally:
 
         conn.close()
-        # ============================================================
+
+
+# ============================================================
+# ADMIN DELETE PROJECT
+# ============================================================
+
+@app.delete("/api/admin/projects/{project_id}")
+def admin_delete_project(
+    project_id: int,
+    _: bool = Depends(require_admin)
+):
+    conn = db()
+    try:
+        existing = conn.execute(
+            """
+            SELECT project_id, project_name
+            FROM projects_latest
+            WHERE project_id = ?
+            """,
+            (project_id,)
+        ).fetchone()
+
+        if not existing:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Project with ID {project_id} not found."
+            )
+
+        name = existing["project_name"]
+
+        conn.execute(
+            "DELETE FROM projects_latest WHERE project_id = ?",
+            (project_id,)
+        )
+        conn.execute(
+            "DELETE FROM project_trajectory WHERE project_id = ?",
+            (project_id,)
+        )
+        conn.commit()
+
+        globals().get("_shap_cache", {}).pop(project_id, None)
+
+        return {
+            "success": True,
+            "message": f"Project {project_id} ('{name}') was permanently deleted.",
+            "project_id": project_id
+        }
+    except HTTPException:
+        raise
+    except Exception as error:
+        conn.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Project deletion failed: {error}"
+        )
+    finally:
+        conn.close()
+
+
+# ============================================================
 # ADMIN PROJECT DATA UPLOAD
 # ============================================================
 
-def infer_report_month_from_filename(filename: str):
+def infer_report_month_from_filename(filename: str, df=None):
     """
-    Infer YYYY-MM from standard PAIMANA filenames such as:
-    Projects_Report_July2026.xlsx
-    Projects_Report_August2025.xlsx
-    Projects_Report_Dec2025.xlsx
+    Infer YYYY-MM from:
+    1. Month name + year in filename (e.g. Projects_Report_July2026.xlsx, August_2025.csv)
+    2. YYYY-MM or YYYY_MM in filename (e.g. 2026-08, 2026_08)
+    3. Report Month column in the dataframe if present
+    4. Default to current year-month
     """
 
     import re
@@ -916,17 +988,33 @@ def infer_report_month_from_filename(filename: str):
             if 2000 <= year <= 2100:
                 return f"{year:04d}-{month_number:02d}"
 
-    return None
+    # Check for YYYY-MM or YYYY_MM pattern in filename
+    ym_match = re.search(r"(20\d{2})[_\-\.](0[1-9]|1[0-2])", name)
+    if ym_match:
+        return f"{ym_match.group(1)}-{ym_match.group(2)}"
+
+    # Check dataframe columns if provided
+    if df is not None and not df.empty:
+        col = find_column(df, ["Report Month", "Month", "ReportMonth", "report_month"])
+        if col:
+            first_val = str(df[col].dropna().iloc[0] if not df[col].dropna().empty else "").strip()
+            m = re.search(r"(20\d{2})[_\-\.](0[1-9]|1[0-2])", first_val)
+            if m:
+                return f"{m.group(1)}-{m.group(2)}"
+
+    # Graceful fallback to current month
+    return datetime.now().strftime("%Y-%m")
 
 
 def clean_column_name(column):
     """
-    Normalize PAIMANA Excel column names.
+    Normalize PAIMANA / Excel / CSV column names.
     """
     return (
         str(column)
         .replace("\n", " ")
         .replace("\r", " ")
+        .replace("_", " ")
         .strip()
         .lower()
     )
@@ -1016,24 +1104,6 @@ async def admin_upload_project_data(
         )
 
     # --------------------------------------------------------
-    # Read report month from filename
-    # --------------------------------------------------------
-
-    report_month = infer_report_month_from_filename(
-        file.filename
-    )
-
-    if report_month is None:
-        raise HTTPException(
-            status_code=400,
-            detail=(
-                "Could not determine report month from filename. "
-                "Use a PAIMANA-style filename such as "
-                "'Projects_Report_July2026.xlsx'."
-            )
-        )
-
-    # --------------------------------------------------------
     # Read uploaded file
     # --------------------------------------------------------
 
@@ -1053,16 +1123,27 @@ async def admin_upload_project_data(
 
             from io import BytesIO
 
-            # PAIMANA project-level Excel files have:
-            # row 0 = title
-            # row 1 = blank
-            # row 2 = actual headers
+            # An Excel file might have headers at row 2 (PAIMANA format)
+            # or row 0 / 1 (standard user export)
+            df = None
+            last_err = None
+            for h in [2, 0, 1]:
+                try:
+                    candidate = pd.read_excel(BytesIO(contents), sheet_name=0, header=h)
+                    candidate_cols = [clean_column_name(c) for c in candidate.columns]
+                    if any(key in candidate_cols for key in ["project code", "project id", "projectid", "project name", "name"]):
+                        df = candidate
+                        break
+                except Exception as err:
+                    last_err = err
 
-            df = pd.read_excel(
-                BytesIO(contents),
-                sheet_name=0,
-                header=2
-            )
+            if df is None:
+                try:
+                    df = pd.read_excel(BytesIO(contents), sheet_name=0, header=0)
+                except Exception:
+                    if last_err:
+                        raise last_err
+                    raise
 
     except Exception as error:
 
@@ -1071,11 +1152,20 @@ async def admin_upload_project_data(
             detail=f"Could not read uploaded file: {error}"
         )
 
-    if df.empty:
+    if df is None or df.empty:
         raise HTTPException(
             status_code=400,
             detail="Uploaded file contains no project rows."
         )
+
+    # --------------------------------------------------------
+    # Read report month
+    # --------------------------------------------------------
+
+    report_month = infer_report_month_from_filename(
+        file.filename,
+        df
+    )
 
     # --------------------------------------------------------
     # Identify columns
@@ -1087,14 +1177,21 @@ async def admin_upload_project_data(
             "Project Code",
             "Project ID",
             "Project Id",
-            "ProjectID"
+            "ProjectID",
+            "project_id",
+            "id",
+            "code"
         ]
     )
 
     project_name_col = find_column(
         df,
         [
-            "Project Name"
+            "Project Name",
+            "ProjectName",
+            "project_name",
+            "name",
+            "project"
         ]
     )
 
@@ -1102,7 +1199,9 @@ async def admin_upload_project_data(
         df,
         [
             "Sector Name",
-            "Sector"
+            "Sector",
+            "SectorName",
+            "sector"
         ]
     )
 
@@ -1110,7 +1209,9 @@ async def admin_upload_project_data(
         df,
         [
             "Line Ministry",
-            "Ministry"
+            "Ministry",
+            "LineMinistry",
+            "line_ministry"
         ]
     )
 
@@ -1118,7 +1219,9 @@ async def admin_upload_project_data(
         df,
         [
             "Implementing Agency",
-            "Agency"
+            "Agency",
+            "ImplementingAgency",
+            "implementing_agency"
         ]
     )
 
@@ -1126,7 +1229,11 @@ async def admin_upload_project_data(
         df,
         [
             "Original Cost (in cr.)",
-            "Original Cost"
+            "Original Cost (in cr)",
+            "Original Cost",
+            "original_cost",
+            "original_cost_cr",
+            "Cost"
         ]
     )
 
@@ -1134,7 +1241,10 @@ async def admin_upload_project_data(
         df,
         [
             "Revised Cost (in cr.)",
-            "Revised Cost"
+            "Revised Cost (in cr)",
+            "Revised Cost",
+            "revised_cost",
+            "revised_cost_cr"
         ]
     )
 
@@ -1142,7 +1252,10 @@ async def admin_upload_project_data(
         df,
         [
             "Expenditure (in cr.)",
-            "Expenditure"
+            "Expenditure (in cr)",
+            "Expenditure",
+            "expenditure",
+            "expenditure_cr"
         ]
     )
 
@@ -1150,7 +1263,12 @@ async def admin_upload_project_data(
         df,
         [
             "Physical Progress (in %)",
-            "Physical Progress"
+            "Physical Progress (%)",
+            "Physical Progress",
+            "physical_progress",
+            "physical_progress_pct",
+            "Progress (%)",
+            "Progress"
         ]
     )
 
@@ -1158,7 +1276,9 @@ async def admin_upload_project_data(
         df,
         [
             "Original Date of Commissioning",
-            "Original Date of Commissioning "
+            "Original Date of Commissioning ",
+            "original_doc",
+            "original doc"
         ]
     )
 
@@ -1166,14 +1286,18 @@ async def admin_upload_project_data(
         df,
         [
             "Revised Date of Commissioning",
-            "Revised Date of Commissioning "
+            "Revised Date of Commissioning ",
+            "revised_doc",
+            "revised doc"
         ]
     )
 
     sanction_col = find_column(
         df,
         [
-            "Sanction Date"
+            "Sanction Date",
+            "sanction_date",
+            "sanction date"
         ]
     )
 
@@ -1727,8 +1851,112 @@ def db():
 
 @app.get("/")
 def home():
-    return FileResponse(STATIC / "index.html")
+    return FileResponse(STATIC / "landing.html")
 
+@app.get("/projects")
+def projects_page():
+    return FileResponse(STATIC / "projects.html")
+
+@app.get("/dashboard")
+def dashboard_page():
+    return FileResponse(STATIC / "dashboard.html")
+
+# ============================================================
+# DASHBOARD DATA
+# ============================================================
+from collections import defaultdict
+
+@app.get("/api/dashboard_data")
+def get_dashboard_data(
+    sector: str = "",
+    ministry: str = "",
+    cost_bracket: str = "",
+    month: str = ""
+):
+    conn = db()
+    query = "SELECT * FROM projects_latest WHERE 1=1"
+    params = []
+    
+    if sector and sector != "All":
+        query += " AND sector = ?"
+        params.append(sector)
+    
+    if ministry and ministry != "All":
+        query += " AND line_ministry = ?"
+        params.append(ministry)
+        
+    if month and month != "All":
+        query += " AND report_month = ?"
+        params.append(month)
+
+    if cost_bracket and cost_bracket != "All":
+        if cost_bracket == "< 500":
+            query += " AND original_cost_cr < 500"
+        elif cost_bracket == "500-1000":
+            query += " AND original_cost_cr >= 500 AND original_cost_cr < 1000"
+        elif cost_bracket == "1000-2000":
+            query += " AND original_cost_cr >= 1000 AND original_cost_cr < 2000"
+        elif cost_bracket == "> 2000":
+            query += " AND original_cost_cr >= 2000"
+
+    rows = conn.execute(query, params).fetchall()
+    
+    total_projects = len(rows)
+    total_original_cost = sum(r["original_cost_cr"] or 0 for r in rows)
+    total_revised_cost = sum(r["revised_cost_cr"] or 0 for r in rows)
+    total_expenditure = sum(r["expenditure_cr"] or 0 for r in rows)
+    
+    sector_dist_count = defaultdict(int)
+    progress_dist = {"< 20": 0, "20-40": 0, "40-60": 0, "60-80": 0, ">= 80": 0}
+    risk_dist = {"High": 0, "Medium": 0, "Low": 0}
+
+    for r in rows:
+        sec = r["sector"] if r["sector"] else "Others"
+        sector_dist_count[sec] += 1
+
+        prog = r["physical_progress_pct"] or 0
+        if prog < 20: progress_dist["< 20"] += 1
+        elif prog < 40: progress_dist["20-40"] += 1
+        elif prog < 60: progress_dist["40-60"] += 1
+        elif prog < 80: progress_dist["60-80"] += 1
+        else: progress_dist[">= 80"] += 1
+
+        rl = r["risk_level"] or "Low"
+        if rl in risk_dist:
+            risk_dist[rl] += 1
+
+    # Top 10 projects by cost escalation
+    delayed = sorted(
+        [r for r in rows if r["cost_escalation_pct"] is not None],
+        key=lambda r: r["cost_escalation_pct"],
+        reverse=True
+    )[:10]
+    top_delayed = [
+        {
+            "project_name": r["project_name"],
+            "sector": r["sector"] or "—",
+            "state": r["state"] or "—",
+            "original_cost_cr": round(r["original_cost_cr"] or 0, 1),
+            "revised_cost_cr": round(r["revised_cost_cr"] or 0, 1),
+            "cost_escalation_pct": round(r["cost_escalation_pct"] or 0, 1),
+            "physical_progress_pct": round(r["physical_progress_pct"] or 0, 1),
+            "risk_level": r["risk_level"] or "—",
+        }
+        for r in delayed
+    ]
+
+    return {
+        "kpi": {
+            "project_count": total_projects,
+            "original_cost": total_original_cost,
+            "revised_cost": total_revised_cost,
+            "expenditure": total_expenditure
+        },
+        "sector_dist_count": dict(sector_dist_count),
+        "progress_dist": progress_dist,
+        "risk_dist": risk_dist,
+        "top_delayed": top_delayed
+    }
 
 # ============================================================
 # SUMMARY
@@ -1811,11 +2039,25 @@ def filters():
         )
     ]
 
+    ministries = [
+        row["line_ministry"]
+        for row in conn.execute(
+            """
+            SELECT DISTINCT line_ministry
+            FROM projects_latest
+            WHERE line_ministry IS NOT NULL
+              AND TRIM(line_ministry) <> ''
+            ORDER BY line_ministry
+            """
+        )
+    ]
+
     conn.close()
 
     return {
         "sectors": sectors,
-        "agencies": agencies
+        "agencies": agencies,
+        "ministries": ministries
     }
 
 
@@ -1903,6 +2145,21 @@ def projects(
     }
 
 
+COST_MODEL_PATH = ROOT / "models" / "cost_overrun_model.pkl"
+TIME_MODEL_PATH = ROOT / "models" / "time_overrun_model.pkl"
+
+_cost_model = None
+_time_model = None
+
+def load_overrun_models():
+    global _cost_model, _time_model
+    if _cost_model is None and COST_MODEL_PATH.exists():
+        with open(COST_MODEL_PATH, "rb") as f:
+            _cost_model = pickle.load(f)
+    if _time_model is None and TIME_MODEL_PATH.exists():
+        with open(TIME_MODEL_PATH, "rb") as f:
+            _time_model = pickle.load(f)
+
 # ============================================================
 # SINGLE PROJECT
 # ============================================================
@@ -1927,8 +2184,22 @@ def project(project_id: int):
             status_code=404,
             detail="Project not found"
         )
+        
+    project_dict = dict(row)
+    
+    # Generate predictive metrics
+    load_overrun_models()
+    if _cost_model and _time_model:
+        features = _cost_model["features"]
+        df = pd.DataFrame([{f: project_dict.get(f, 0) or 0 for f in features}])
+        
+        predicted_cost = _cost_model["model"].predict(df)[0]
+        predicted_time = _time_model["model"].predict(df)[0]
+        
+        project_dict["predicted_cost_overrun_cr"] = round(float(predicted_cost), 2)
+        project_dict["predicted_time_overrun_months"] = round(float(predicted_time), 1)
 
-    return dict(row)
+    return project_dict
 
 
 # ============================================================
@@ -3642,3 +3913,199 @@ def download_project_pdf(project_id: int):
                 f'attachment; filename="{filename}"'
         }
     )
+
+
+# ============================================================
+# AI PROJECT INTELLIGENCE ASSISTANT
+# ============================================================
+
+class AssistantRequest(BaseModel):
+    project_id: int
+    question: str
+
+
+def _build_project_context(project_id: int) -> str:
+    """Build a rich text context block from project data."""
+    conn = db()
+
+    row = conn.execute(
+        "SELECT * FROM projects_latest WHERE project_id = ?",
+        (project_id,)
+    ).fetchone()
+
+    if not row:
+        conn.close()
+        return ""
+
+    p = dict(row)
+
+    # Pull last 6 months of trajectory
+    traj = conn.execute(
+        """
+        SELECT report_month, physical_progress_pct, expenditure_cr, revised_cost_cr
+        FROM project_trajectory
+        WHERE project_id = ?
+        ORDER BY report_month DESC
+        LIMIT 6
+        """,
+        (project_id,)
+    ).fetchall()
+    conn.close()
+
+    # Run overrun predictions
+    load_overrun_models()
+    predicted_cost = None
+    predicted_time = None
+    if _cost_model and _time_model:
+        features = _cost_model["features"]
+        df = pd.DataFrame([{f: p.get(f, 0) or 0 for f in features}])
+        predicted_cost = round(float(_cost_model["model"].predict(df)[0]), 2)
+        predicted_time = round(float(_time_model["model"].predict(df)[0]), 1)
+
+    traj_lines = "\n".join([
+        f"  - {r['report_month']}: progress={r['physical_progress_pct']}%, "
+        f"expenditure=Rs.{r['expenditure_cr']} Cr, revised_cost=Rs.{r['revised_cost_cr']} Cr"
+        for r in traj
+    ]) if traj else "  No historical data available."
+
+    ctx = (
+        "PROJECT INTELLIGENCE BRIEF\n"
+        "===========================\n"
+        f"Project Name   : {p.get('project_name', 'N/A')}\n"
+        f"Project ID     : {p.get('project_id', 'N/A')}\n"
+        f"Sector         : {p.get('sector', 'N/A')}\n"
+        f"Line Ministry  : {p.get('line_ministry', 'N/A')}\n"
+        f"Agency         : {p.get('agency', 'N/A')}\n\n"
+        "FINANCIAL SNAPSHOT\n"
+        "-------------------\n"
+        f"Original Cost  : Rs.{p.get('original_cost_cr', 0)} Cr\n"
+        f"Revised Cost   : Rs.{p.get('revised_cost_cr', 0)} Cr\n"
+        f"Expenditure    : Rs.{p.get('expenditure_cr', 0)} Cr\n"
+        f"Cost Escalation: {p.get('cost_escalation_pct', 0)}%\n\n"
+        "PROGRESS & RISK\n"
+        "----------------\n"
+        f"Physical Progress        : {p.get('physical_progress_pct', 0)}%\n"
+        f"Expenditure-Progress Gap : {p.get('expenditure_progress_gap', 0):.1f} pp\n"
+        f"Risk Level               : {p.get('risk_level', 'N/A')}\n"
+        f"Overall Risk Score       : {p.get('overall_risk_score', 0):.2f}\n"
+        f"Trajectory               : {p.get('trajectory', 'N/A')}\n"
+        f"Priority                 : {p.get('priority', 'N/A')}\n"
+        f"Key Risk Drivers         : {p.get('key_risk_drivers', 'N/A')}\n\n"
+        "AI PREDICTIONS (ML Models)\n"
+        "---------------------------\n"
+        f"Predicted Cost Overrun   : Rs.{predicted_cost} Cr "
+        f"{'(OVER BUDGET)' if predicted_cost and predicted_cost > 0 else '(UNDER BUDGET)'}\n"
+        f"Predicted Schedule Delay : {predicted_time} months "
+        f"{'(DELAYED)' if predicted_time and predicted_time > 0 else '(AHEAD OF SCHEDULE)'}\n\n"
+        "RECENT TRAJECTORY (Last 6 Months)\n"
+        "------------------------------------\n"
+        f"{traj_lines}\n\n"
+        "DATES\n"
+        "------\n"
+        f"Sanction Date              : {p.get('sanction_date', 'N/A')}\n"
+        f"Original Commissioning Date: {p.get('original_date_of_commissioning', 'N/A')}\n"
+        f"Revised Commissioning Date : {p.get('revised_date_of_commissioning', 'N/A')}\n"
+        f"Report Month               : {p.get('report_month', 'N/A')}\n"
+    )
+    return ctx.strip()
+
+
+SYSTEM_PROMPT = (
+    "You are TriNetra AI, an expert infrastructure project analyst for India's national "
+    "infrastructure monitoring system (PAIMANA / MoSPI). You help policymakers, project "
+    "administrators, and monitoring agencies understand project health, diagnose risks, and "
+    "recommend interventions for Central Sector Infrastructure Projects costing Rs.150 crore "
+    "and above. You are given a structured data brief for a specific project. Answer the "
+    "user's question concisely and insightfully. Be specific — reference actual numbers from "
+    "the brief. When relevant, suggest practical policy interventions. Use plain English. "
+    "Do not fabricate data not in the brief. Keep answers under 200 words unless a detailed "
+    "explanation is explicitly requested."
+)
+
+
+@app.post("/api/assistant")
+def assistant(req: AssistantRequest):
+    context = _build_project_context(req.project_id)
+    if not context:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    gemini_key = os.getenv("GEMINI_API_KEY", "")
+    
+    if not gemini_key and os.path.exists("api_key.txt"):
+        with open("api_key.txt", "r") as f:
+            gemini_key = f.read().strip()
+
+    # -- Gemini path --
+    if gemini_key:
+        try:
+            from google import genai
+            client = genai.Client(api_key=gemini_key)
+            prompt = f"{context}\n\nUSER QUESTION: {req.question}"
+            response = client.models.generate_content(
+                model="gemini-3.8-flash",
+                contents=prompt,
+                config=genai.types.GenerateContentConfig(
+                    system_instruction=SYSTEM_PROMPT
+                )
+            )
+            return {"answer": response.text, "backend": "gemini"}
+        except Exception as e:
+            print("Gemini API Error:", e)
+            pass  # fall through to Ollama
+
+    # -- Ollama fallback --
+    try:
+        import urllib.request
+        import json as _json
+        payload = _json.dumps({
+            "model": "llama3.2",
+            "prompt": f"{SYSTEM_PROMPT}\n\n{context}\n\nUSER QUESTION: {req.question}",
+            "stream": False
+        }).encode()
+        req_obj = urllib.request.Request(
+            "http://localhost:11434/api/generate",
+            data=payload,
+            headers={"Content-Type": "application/json"},
+            method="POST"
+        )
+        with urllib.request.urlopen(req_obj, timeout=60) as resp:
+            data = _json.loads(resp.read())
+            return {"answer": data.get("response", ""), "backend": "ollama"}
+    except Exception:
+        pass
+
+    # -- Fallback Heuristic Analyst (if neither Gemini nor Ollama is available) --
+    try:
+        # Extract key highlights from context
+        lines = [line.strip() for line in context.split("\n") if ":" in line]
+        kv = {}
+        for l in lines:
+            parts = l.split(":", 1)
+            if len(parts) == 2:
+                kv[parts[0].strip()] = parts[1].strip()
+
+        pname = kv.get("Project Name", "This project")
+        risk = kv.get("Risk Level", "Medium")
+        score = kv.get("Overall Risk Score", "—")
+        prog = kv.get("Physical Progress", "—")
+        cost = kv.get("Original Cost", "—")
+        rev_cost = kv.get("Revised Cost", "—")
+        exp = kv.get("Expenditure", "—")
+        esc = kv.get("Cost Escalation", "—")
+        drivers = kv.get("Key Risk Drivers", "cost and schedule variances")
+        delay = kv.get("Predicted Schedule Delay", "—")
+        overrun = kv.get("Predicted Cost Overrun", "—")
+
+        fallback_answer = (
+            f"**TriNetra Project Summary for {pname}**\n\n"
+            f"• **Risk Classification:** Evaluated at **{risk} Risk** (TriNetra Risk Score: {score}/100).\n"
+            f"• **Physical Progress:** Standing at **{prog}** with cumulative expenditure of {exp} against an original budget of {cost} (Revised: {rev_cost}, Escalation: {esc}).\n"
+            f"• **ML Predictions:** Estimated schedule adjustment of {delay}, with cost overrun outlook of {overrun}.\n"
+            f"• **Key Drivers & Outlook:** Primary risk drivers flagged include {drivers}. Interventions should prioritize unblocking critical milestones, reconciling expenditure gaps, and expediting regulatory clearances."
+        )
+        return {"answer": fallback_answer, "backend": "analytical_engine"}
+    except Exception:
+        raise HTTPException(
+            status_code=503,
+            detail="No AI backend available. Set GEMINI_API_KEY environment variable or run Ollama locally."
+        )

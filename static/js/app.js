@@ -437,24 +437,201 @@ document.addEventListener(
 
             });
             document
-    .getElementById("closeAdminProjectForm")
-    ?.addEventListener("click", () => {
+                .getElementById("closeAdminProjectForm")
+                ?.addEventListener("click", () => {
+                    const formOverlay = document.getElementById("adminProjectFormOverlay");
+                    const dashboard = document.getElementById("adminDashboardOverlay");
+                    formOverlay?.classList.add("hidden");
+                    dashboard?.classList.remove("hidden");
+                });
 
-        const formOverlay =
-            document.getElementById(
-                "adminProjectFormOverlay"
-            );
+            document
+                .getElementById("cancelAdminProjectForm")
+                ?.addEventListener("click", () => {
+                    const formOverlay = document.getElementById("adminProjectFormOverlay");
+                    const dashboard = document.getElementById("adminDashboardOverlay");
+                    formOverlay?.classList.add("hidden");
+                    dashboard?.classList.remove("hidden");
+                });
 
-        const dashboard =
-            document.getElementById(
-                "adminDashboardOverlay"
-            );
 
-        formOverlay?.classList.add("hidden");
+        // ========================================================
+        // ADMIN DELETE PROJECT
+        // ========================================================
+        const adminDeleteOverlay = document.getElementById("adminDeleteProjectOverlay");
+        const deleteIdInput = document.getElementById("adminDeleteProjectId");
+        const deletePreviewCard = document.getElementById("adminDeletePreviewCard");
+        const deleteMsg = document.getElementById("adminDeleteProjectMessage");
+        const deleteConfirmBtn = document.getElementById("confirmAdminDeleteProject");
+        let projectToDelete = null;
 
-        dashboard?.classList.remove("hidden");
+        function resetDeleteModal() {
+            if (deleteIdInput) deleteIdInput.value = "";
+            if (deletePreviewCard) deletePreviewCard.classList.add("hidden");
+            if (deleteMsg) {
+                deleteMsg.className = "admin-form-message hidden";
+                deleteMsg.textContent = "";
+            }
+            if (deleteConfirmBtn) {
+                deleteConfirmBtn.disabled = true;
+                deleteConfirmBtn.textContent = "Permanently Delete Project";
+            }
+            projectToDelete = null;
+        }
 
-    });
+        document.getElementById("adminDeleteProject")?.addEventListener("click", () => {
+            adminDashboardOverlay.classList.add("hidden");
+            resetDeleteModal();
+            adminDeleteOverlay?.classList.remove("hidden");
+            deleteIdInput?.focus();
+        });
+
+        const closeDeleteModal = () => {
+            adminDeleteOverlay?.classList.add("hidden");
+            resetDeleteModal();
+            adminDashboardOverlay?.classList.remove("hidden");
+        };
+
+        document.getElementById("closeAdminDeleteProject")?.addEventListener("click", closeDeleteModal);
+        document.getElementById("cancelAdminDeleteProject")?.addEventListener("click", closeDeleteModal);
+
+        async function verifyProjectForDelete() {
+            const pid = parseInt(deleteIdInput?.value?.trim(), 10);
+            if (!pid || isNaN(pid)) {
+                if (deleteMsg) {
+                    deleteMsg.className = "admin-form-message admin-form-error";
+                    deleteMsg.textContent = "Please enter a valid Project ID.";
+                }
+                deletePreviewCard?.classList.add("hidden");
+                if (deleteConfirmBtn) deleteConfirmBtn.disabled = true;
+                projectToDelete = null;
+                return;
+            }
+
+            try {
+                if (deleteMsg) {
+                    deleteMsg.className = "admin-form-message";
+                    deleteMsg.textContent = "Looking up project...";
+                }
+
+                const res = await fetch(`/api/projects/${pid}`);
+                if (!res.ok) {
+                    throw new Error(res.status === 404 ? `Project ID ${pid} not found in database.` : "Failed to fetch project details.");
+                }
+
+                const data = await res.json();
+                projectToDelete = data;
+
+                // Populate preview card
+                const nameEl = document.getElementById("adminDeletePreviewName");
+                if (nameEl) nameEl.textContent = data.project_name || "Unnamed Project";
+                const idEl = document.getElementById("adminDeletePreviewId");
+                if (idEl) idEl.textContent = data.project_id;
+                const secEl = document.getElementById("adminDeletePreviewSector");
+                if (secEl) secEl.textContent = data.sector || "—";
+                const minEl = document.getElementById("adminDeletePreviewMinistry");
+                if (minEl) minEl.textContent = data.line_ministry || data.agency || "—";
+                const costEl = document.getElementById("adminDeletePreviewCost");
+                if (costEl) costEl.textContent = data.original_cost_cr != null ? Number(data.original_cost_cr).toLocaleString("en-IN") : "—";
+                
+                const riskBadge = document.getElementById("adminDeletePreviewRisk");
+                if (riskBadge) {
+                    riskBadge.textContent = data.risk_level || "Unknown";
+                    riskBadge.style.color = data.risk_level === "High" ? "#dc2626" : data.risk_level === "Medium" ? "#ea580c" : "#16a34a";
+                }
+
+                deletePreviewCard?.classList.remove("hidden");
+                if (deleteConfirmBtn) {
+                    deleteConfirmBtn.disabled = false;
+                    deleteConfirmBtn.textContent = `Permanently Delete Project #${pid}`;
+                }
+
+                if (deleteMsg) {
+                    deleteMsg.className = "admin-form-message hidden";
+                    deleteMsg.textContent = "";
+                }
+            } catch (err) {
+                projectToDelete = null;
+                deletePreviewCard?.classList.add("hidden");
+                if (deleteConfirmBtn) {
+                    deleteConfirmBtn.disabled = true;
+                    deleteConfirmBtn.textContent = "Permanently Delete Project";
+                }
+                if (deleteMsg) {
+                    deleteMsg.className = "admin-form-message admin-form-error";
+                    deleteMsg.textContent = err.message;
+                }
+            }
+        }
+
+        document.getElementById("adminLookupDeleteProject")?.addEventListener("click", verifyProjectForDelete);
+        deleteIdInput?.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                verifyProjectForDelete();
+            }
+        });
+
+        // Perform actual delete
+        deleteConfirmBtn?.addEventListener("click", async () => {
+            const pid = projectToDelete ? projectToDelete.project_id : parseInt(deleteIdInput?.value?.trim(), 10);
+            if (!pid) return;
+
+            const projName = projectToDelete ? projectToDelete.project_name : `Project #${pid}`;
+            const confirmed = window.confirm(`Are you absolutely sure you want to permanently delete Project #${pid} ("${projName}")?\n\nThis cannot be undone.`);
+            if (!confirmed) return;
+
+            if (!adminToken) {
+                if (deleteMsg) {
+                    deleteMsg.className = "admin-form-message admin-form-error";
+                    deleteMsg.textContent = "Admin session expired. Please log in again.";
+                }
+                return;
+            }
+
+            try {
+                deleteConfirmBtn.disabled = true;
+                deleteConfirmBtn.textContent = "Deleting...";
+
+                const res = await fetch(`/api/admin/projects/${pid}`, {
+                    method: "DELETE",
+                    headers: {
+                        "Authorization": `Bearer ${adminToken}`
+                    }
+                });
+
+                const result = await res.json();
+                if (!res.ok) {
+                    throw new Error(result.detail || "Delete operation failed.");
+                }
+
+                if (deleteMsg) {
+                    deleteMsg.className = "admin-form-message admin-form-success";
+                    deleteMsg.textContent = `Project #${pid} was permanently deleted successfully.`;
+                }
+
+                deletePreviewCard?.classList.add("hidden");
+                deleteConfirmBtn.textContent = "Deleted";
+
+                // Refresh main views
+                await loadProjects(1);
+                await loadSummary();
+
+                setTimeout(() => {
+                    closeDeleteModal();
+                }, 1400);
+
+            } catch (err) {
+                if (deleteConfirmBtn) {
+                    deleteConfirmBtn.disabled = false;
+                    deleteConfirmBtn.textContent = `Permanently Delete Project #${pid}`;
+                }
+                if (deleteMsg) {
+                    deleteMsg.className = "admin-form-message admin-form-error";
+                    deleteMsg.textContent = err.message;
+                }
+            }
+        });
 
 
         // ========================================================
@@ -1662,6 +1839,8 @@ async function openProject(
         currentProject =
             project;
 
+        // Reset AI assistant for this project
+        aiInitForProject(projectId);
 
         renderProjectModal(
             project
@@ -1945,8 +2124,31 @@ if (htmlButton) {
             </div>
 
 
-            <div class="detail-card">
+            <div class="detail-card predicted-card ${project.predicted_cost_overrun_cr < 0 ? 'predicted-good' : ''}">
+                <span class="predicted-label">
+                    ${project.predicted_cost_overrun_cr < 0 ? 'Predicted Cost Saving' : 'Predicted Cost Overrun'}
+                </span>
+                <strong class="predicted-value">
+                    ${project.predicted_cost_overrun_cr < 0
+                        ? '&#8377;' + number(Math.abs(project.predicted_cost_overrun_cr), 2) + ' Cr under budget'
+                        : '&#8377;' + number(project.predicted_cost_overrun_cr, 2) + ' Cr over budget'
+                    }
+                </strong>
+            </div>
 
+            <div class="detail-card predicted-card ${project.predicted_time_overrun_months <= 0 ? 'predicted-good' : ''}">
+                <span class="predicted-label">
+                    ${project.predicted_time_overrun_months <= 0 ? 'Predicted Ahead of Schedule' : 'Predicted Delay'}
+                </span>
+                <strong class="predicted-value">
+                    ${project.predicted_time_overrun_months <= 0
+                        ? number(Math.abs(project.predicted_time_overrun_months), 1) + ' months ahead'
+                        : number(project.predicted_time_overrun_months, 1) + ' months delayed'
+                    }
+                </strong>
+            </div>
+
+            <div class="detail-card">
                 <span>Priority</span>
 
                 <strong>
@@ -3363,10 +3565,17 @@ function renderTrajectory(
                                 progress,
 
                             tension:
-                                0.3,
+                                0.35,
 
                             yAxisID:
-                                "progress"
+                                "progress",
+
+                            borderColor: "#1a5c38",
+                            backgroundColor: "rgba(26, 92, 56, 0.08)",
+                            borderWidth: 2.5,
+                            pointRadius: 4,
+                            pointBackgroundColor: "#1a5c38",
+                            fill: true
                         },
 
                         {
@@ -3377,10 +3586,18 @@ function renderTrajectory(
                                 gap,
 
                             tension:
-                                0.3,
+                                0.35,
 
                             yAxisID:
-                                "gap"
+                                "gap",
+
+                            borderColor: "#e07b2a",
+                            backgroundColor: "rgba(224, 123, 42, 0.07)",
+                            borderWidth: 2.5,
+                            pointRadius: 4,
+                            pointBackgroundColor: "#e07b2a",
+                            borderDash: [5, 3],
+                            fill: false
                         }
 
                     ]
@@ -3401,14 +3618,57 @@ function renderTrajectory(
                         intersect: false
                     },
 
+                    plugins: {
+                        legend: {
+                            labels: {
+                                font: {
+                                    family: "'Inter', Arial, sans-serif",
+                                    size: 12,
+                                    weight: '600'
+                                },
+                                color: "#3d5240",
+                                usePointStyle: true
+                            }
+                        },
+                        tooltip: {
+                            bodyFont: {
+                                family: "'Inter', Arial, sans-serif",
+                                size: 12
+                            }
+                        }
+                    },
 
                     scales: {
+
+                        x: {
+                            ticks: {
+                                font: {
+                                    family: "'Inter', Arial, sans-serif",
+                                    size: 11
+                                },
+                                color: "#6b7c72"
+                            },
+                            grid: {
+                                color: "rgba(217, 224, 219, 0.5)"
+                            }
+                        },
 
                         progress: {
 
                             position: "left",
 
-                            beginAtZero: true
+                            beginAtZero: true,
+
+                            ticks: {
+                                font: {
+                                    family: "'Inter', Arial, sans-serif",
+                                    size: 11
+                                },
+                                color: "#1a5c38"
+                            },
+                            grid: {
+                                color: "rgba(217, 224, 219, 0.4)"
+                            }
 
                         },
 
@@ -3418,6 +3678,14 @@ function renderTrajectory(
                             position: "right",
 
                             beginAtZero: true,
+
+                            ticks: {
+                                font: {
+                                    family: "'Inter', Arial, sans-serif",
+                                    size: 11
+                                },
+                                color: "#e07b2a"
+                            },
 
                             grid: {
 
@@ -3832,6 +4100,10 @@ function closeModal() {
         "modal-open"
     );
 
+    // Reset lazy chatbot state
+    const panel   = document.getElementById("aiChatbotPanel");
+    if (panel) panel.style.display = "none";
+
 
     currentProject =
         null;
@@ -3951,8 +4223,7 @@ async function loadRiskChart() {
             );
 
 
-        // Risk-level colors
-
+        // Risk-level colors — infrastructure growth theme
         const riskColors =
             rows.map(
                 row => {
@@ -3962,20 +4233,16 @@ async function loadRiskChart() {
                     ) {
 
                         case "High":
-
-                            return "#ef4444";
+                            return "#ef4444";   // Red
 
                         case "Medium":
-
-                            return "#f59e0b";
+                            return "#e07b2a";   // Amber (theme accent)
 
                         case "Low":
-
-                            return "#22c55e";
+                            return "#1a5c38";   // Forest green (theme primary)
 
                         default:
-
-                            return "#94a3b8";
+                            return "#d1d5db";
 
                     }
 
@@ -4010,11 +4277,11 @@ async function loadRiskChart() {
                                     riskColors,
 
                                 borderColor:
-                                    "#ffffff",
+                                    "#f7f5f2",
 
-                                borderWidth: 2,
+                                borderWidth: 3,
 
-                                hoverOffset: 6
+                                hoverOffset: 8
                             }
 
                         ]
@@ -4031,11 +4298,41 @@ async function loadRiskChart() {
 
                             legend: {
 
-                                position: "bottom"
+                                position: "bottom",
 
+                                labels: {
+                                    font: {
+                                        family: "'Inter', Arial, sans-serif",
+                                        size: 12,
+                                        weight: '600'
+                                    },
+                                    color: "#3d5240",
+                                    padding: 16,
+                                    usePointStyle: true,
+                                    pointStyleWidth: 10
+                                }
+
+                            },
+
+                            tooltip: {
+                                callbacks: {
+                                    label: function(ctx) {
+                                        const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                        const pct = total > 0
+                                            ? ((ctx.raw / total) * 100).toFixed(1)
+                                            : "0";
+                                        return ` ${ctx.label}: ${ctx.raw} projects (${pct}%)`;
+                                    }
+                                },
+                                bodyFont: {
+                                    family: "'Inter', Arial, sans-serif",
+                                    size: 12
+                                }
                             }
 
-                        }
+                        },
+
+                        cutout: "62%"
 
                     }
 
@@ -4369,9 +4666,180 @@ window.openProject =
     openProject;
 
 
+// ============================================================
+// AI ASSISTANT
+// ============================================================
+
+let _aiCurrentProjectId = null;
+
+function aiResetChat() {
+    const msgs = document.getElementById("aiMessages");
+    if (!msgs) return;
+    msgs.innerHTML = `
+        <div class="ai-message ai-message--bot">
+            <div class="ai-message-text">
+                Hello! I have full context on this project — its financials, risk scores, trajectory, and AI predictions. Ask me anything.
+            </div>
+        </div>`;
+}
+
+function aiAppendMessage(text, role) {
+    const msgs = document.getElementById("aiMessages");
+    if (!msgs) return;
+    const div = document.createElement("div");
+    div.className = `ai-message ai-message--${role}`;
+    div.innerHTML = `<div class="ai-message-text">${escapeHtml(text)}</div>`;
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+    return div;
+}
+
+function aiShowTyping() {
+    const msgs = document.getElementById("aiMessages");
+    if (!msgs) return null;
+    const div = document.createElement("div");
+    div.className = "ai-message ai-message--bot";
+    div.innerHTML = `<div class="ai-typing"><span></span><span></span><span></span></div>`;
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+    return div;
+}
+
+async function aiAsk(question) {
+    if (!question.trim() || !_aiCurrentProjectId) return;
+
+    const btn  = document.getElementById("aiSendBtn");
+    const inp  = document.getElementById("aiQuestionInput");
+
+    btn.disabled = true;
+    inp.value = "";
+
+    aiAppendMessage(question, "user");
+    const typingEl = aiShowTyping();
+
+    try {
+        const res = await fetch("/api/assistant", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                project_id: _aiCurrentProjectId,
+                question: question
+            })
+        });
+
+        if (typingEl) typingEl.remove();
+
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            const errDiv = document.createElement("div");
+            errDiv.className = "ai-message ai-message--bot";
+            errDiv.innerHTML = `<div class="ai-error-text">${escapeHtml(err.detail || "Something went wrong. Please try again.")}</div>`;
+            document.getElementById("aiMessages").appendChild(errDiv);
+        } else {
+            const data = await res.json();
+            const botDiv = aiAppendMessage(data.answer, "bot");
+            // Show which backend responded
+            const meta = document.createElement("div");
+            meta.className = "ai-message-meta";
+            meta.textContent = `Powered by ${data.backend === "gemini" ? "Gemini AI" : "Ollama (local)"}`;
+            botDiv.appendChild(meta);
+        }
+    } catch (e) {
+        if (typingEl) typingEl.remove();
+        aiAppendMessage("Network error. Make sure the server is running.", "bot");
+    } finally {
+        btn.disabled = false;
+        inp.focus();
+        const msgs = document.getElementById("aiMessages");
+        if (msgs) msgs.scrollTop = msgs.scrollHeight;
+    }
+}
+
+// Wire up send button & Enter key
+document.addEventListener("DOMContentLoaded", () => {
+
+    const btn = document.getElementById("aiSendBtn");
+    const inp = document.getElementById("aiQuestionInput");
+
+    if (btn && inp) {
+        btn.addEventListener("click", () => aiAsk(inp.value));
+        inp.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                aiAsk(inp.value);
+            }
+        });
+    }
+
+    // Suggestion chips
+    document.querySelectorAll(".ai-suggestion-chip").forEach(chip => {
+        chip.addEventListener("click", () => {
+            aiAsk(chip.dataset.q);
+        });
+    });
+
+    // Methodology Modal Wiring
+    const methodBtn = document.getElementById("mlMethodologyBtn");
+    const methodModal = document.getElementById("methodologyModal");
+    const methodCloseBtn = document.getElementById("closeMethodologyModal");
+
+    if (methodBtn && methodModal) {
+        methodBtn.addEventListener("click", () => {
+            methodModal.classList.remove("hidden");
+            document.body.style.overflow = "hidden";
+        });
+    }
+
+    if (methodCloseBtn && methodModal) {
+        methodCloseBtn.addEventListener("click", () => {
+            methodModal.classList.add("hidden");
+            document.body.style.overflow = "";
+        });
+    }
+
+    if (methodModal) {
+        methodModal.addEventListener("click", (e) => {
+            if (e.target === methodModal) {
+                methodModal.classList.add("hidden");
+                document.body.style.overflow = "";
+            }
+        });
+    }
+
+});
+
+// Called from openProject() — reset chat and set context
+function aiInitForProject(projectId) {
+    _aiCurrentProjectId = projectId;
+    aiResetChat();
+}
+
+
+
 window.closeModal =
     closeModal;
 
 
 window.loadProjects =
     loadProjects;
+
+
+// ── Lazy AI Chatbot toggle ──────────────────────────────────────────────
+document.addEventListener("DOMContentLoaded", () => {
+    const openBtn  = document.getElementById("openAiChatBtn");
+    const closeBtn = document.getElementById("closeAiChatBtn");
+    const panel    = document.getElementById("aiChatbotPanel");
+
+    if (openBtn && panel) {
+        openBtn.addEventListener("click", () => {
+            panel.style.display = "block";
+            panel.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+    }
+
+    if (closeBtn && panel) {
+        closeBtn.addEventListener("click", () => {
+            panel.style.display = "none";
+        });
+    }
+});

@@ -1,13 +1,52 @@
-@"
-.venv/
+# Python bytecode & cache
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+.env/
+
+# Environment variables & sensitive keys
 .env
 .env.*
+api_key.txt
+api_key*.txt
+*.key
+*.pem
+
+# Database backups & temporary files (keep data/trinetra.db)
+data/trinetra_before_*.db
+data/projects.db
+data/*backup*.db
+data/*.bak
+data/*.tmp
+data/*.sqlite-journal
+*.db-journal
+
+# Temporary / Scratch caches & logs
+static/dashboard-data.json
+scratch/
+*.log
+logs/
+
+# Operating System files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE & Editor files
 .vscode/
 .idea/
-*.log
-"@ | Set-Content .gitignore
-data/trinetra_before_*.db
+*.swp
+*.swo
+*~
