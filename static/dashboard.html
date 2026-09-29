@@ -336,26 +336,219 @@
             </div>
 
             <div class="chart-card" style="grid-column: 1 / -1; overflow: auto;">
-                <div class="chart-header">
-                    <h3>Top 10 Projects by Cost Escalation</h3>
+                <div class="chart-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                    <div>
+                        <h3 style="margin:0;">Top 10 Projects by Cost Escalation</h3>
+                        <p style="margin:4px 0 0 0; font-size:12px; color:#64748b;">Click any project row to view full project telemetry, ML risk drivers, trajectory, and AI assistant</p>
+                    </div>
+                    <span style="font-size:12px; font-weight:600; color:#0ea5e9; background:#e0f2fe; padding:4px 10px; border-radius:6px;">Interactive Rows</span>
                 </div>
-                <div style="overflow-x: auto; overflow-y: auto; max-height: 320px;">
+                <div style="overflow-x: auto; overflow-y: auto; max-height: 380px;">
                     <table id="delayedTable" style="width:100%; border-collapse: collapse; font-size: 13px;">
                         <thead>
-                            <tr style="background:#334155; position: sticky; top: 0;">
-                                <th style="text-align:left; padding:10px 8px; border-bottom:2px solid #475569; white-space:nowrap; color:#f1f5f9;">Project Name</th>
-                                <th style="text-align:left; padding:10px 8px; border-bottom:2px solid #475569; color:#f1f5f9;">Sector</th>
-                                <th style="text-align:right; padding:10px 8px; border-bottom:2px solid #475569; white-space:nowrap; color:#f1f5f9;">Orig. Cost (cr)</th>
-                                <th style="text-align:right; padding:10px 8px; border-bottom:2px solid #475569; white-space:nowrap; color:#f1f5f9;">Rev. Cost (cr)</th>
-                                <th style="text-align:right; padding:10px 8px; border-bottom:2px solid #475569; white-space:nowrap; color:#f1f5f9;">Escalation %</th>
-                                <th style="text-align:right; padding:10px 8px; border-bottom:2px solid #475569; white-space:nowrap; color:#f1f5f9;">Progress %</th>
-                                <th style="text-align:center; padding:10px 8px; border-bottom:2px solid #475569; color:#f1f5f9;">Risk</th>
+                            <tr style="background:#334155; position: sticky; top: 0; z-index: 10;">
+                                <th style="text-align:left; padding:10px 10px; border-bottom:2px solid #475569; white-space:nowrap; color:#f1f5f9;">Project Name</th>
+                                <th style="text-align:left; padding:10px 10px; border-bottom:2px solid #475569; color:#f1f5f9;">Sector</th>
+                                <th style="text-align:right; padding:10px 10px; border-bottom:2px solid #475569; white-space:nowrap; color:#f1f5f9;">Orig. Cost (cr)</th>
+                                <th style="text-align:right; padding:10px 10px; border-bottom:2px solid #475569; white-space:nowrap; color:#f1f5f9;">Rev. Cost (cr)</th>
+                                <th style="text-align:right; padding:10px 10px; border-bottom:2px solid #475569; white-space:nowrap; color:#f1f5f9;">Escalation %</th>
+                                <th style="text-align:right; padding:10px 10px; border-bottom:2px solid #475569; white-space:nowrap; color:#f1f5f9;">Progress %</th>
+                                <th style="text-align:center; padding:10px 10px; border-bottom:2px solid #475569; color:#f1f5f9;">Risk</th>
+                                <th style="text-align:center; padding:10px 10px; border-bottom:2px solid #475569; color:#f1f5f9; min-width:180px;">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="delayedTableBody"></tbody>
                     </table>
                 </div>
             </div>
+
+            <!-- =========================================================
+                 PUBLIC DASHBOARD AI ADVISOR (PORTFOLIO & DELAYS)
+            ========================================================= -->
+            <div id="publicAiAdvisorCard" class="chart-card" style="grid-column: 1 / -1; margin-top: 10px; border: 1.5px solid #0284c7; background: #ffffff; border-radius: 14px; overflow: hidden; box-shadow: 0 4px 20px rgba(2, 132, 199, 0.08); min-height: auto;">
+                <div style="background: linear-gradient(135deg, #0284c7, #0369a1); padding: 18px 22px; color: white; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="background: rgba(255,255,255,0.22); border-radius: 8px; padding: 4px 10px; font-size: 14px; font-weight: 800; letter-spacing: 0.5px;">AI 🤖</span>
+                        <div>
+                            <h3 style="margin: 0; font-size: 17px; font-weight: 800; color: white;">TriNetra AI Advisor — Ask About Cost Escalations &amp; Delayed Projects</h3>
+                            <p style="margin: 3px 0 0 0; font-size: 12px; color: #e0f2fe;">Ask questions about national infrastructure delays, root causes of cost escalation in top projects, or recommended interventions across sectors.</p>
+                        </div>
+                    </div>
+                    <span style="background: rgba(255,255,255,0.2); color: white; border-radius: 999px; padding: 4px 14px; font-size: 12px; font-weight: 700;">⚡ Instant Cloud Intelligence</span>
+                </div>
+
+                <div class="ai-messages" id="publicAiMessages" style="height: 260px; overflow-y: auto; padding: 18px; background: #f8fafc; display: flex; flex-direction: column; gap: 12px;">
+                    <div class="ai-message ai-message--bot" style="max-width: 85%; align-self: flex-start; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 16px; font-size: 13px; color: #1e293b; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                        👋 <strong>Hello! I am TriNetra AI.</strong> I have comprehensive intelligence on all central sector infrastructure projects, budget revisions, and sector delay patterns. Ask me about the Top 10 cost escalation projects above, sector risk patterns, or suggested policy interventions.
+                    </div>
+                </div>
+
+                <div style="padding: 14px 20px; border-top: 1px solid #e2e8f0; background: #ffffff;">
+                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                        <input type="text" id="publicAiQuestionInput" placeholder="e.g. Why are railway projects experiencing the highest cost escalation? What interventions work?" autocomplete="off" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();askPublicAi();}" style="flex: 1; padding: 11px 16px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; background: #f8fafc;" onfocus="this.style.borderColor='#0284c7'; this.style.background='#ffffff';" onblur="this.style.borderColor='#cbd5e1';"/>
+                        <button id="publicAiSendBtn" type="button" onclick="askPublicAi()" style="background: linear-gradient(135deg, #0284c7, #0369a1); color: white; border: none; border-radius: 8px; padding: 11px 24px; font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap; box-shadow: 0 2px 8px rgba(2, 132, 199, 0.3);">
+                            Ask AI ↗
+                        </button>
+                    </div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+                        <span style="font-size: 12px; font-weight: 600; color: #64748b; margin-right: 4px;">Quick Queries:</span>
+                        <span class="public-suggestion-chip" onclick="askPublicAi('Why are railway projects experiencing the highest cost escalation?')" style="background: #e0f2fe; color: #0369a1; padding: 6px 14px; border-radius: 999px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid #bae6fd;">Railways Cost Escalation</span>
+                        <span class="public-suggestion-chip" onclick="askPublicAi('Summarize the top 10 cost escalation projects and their common risk factors.')" style="background: #e0f2fe; color: #0369a1; padding: 6px 14px; border-radius: 999px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid #bae6fd;">Top 10 Risk Analysis</span>
+                        <span class="public-suggestion-chip" onclick="askPublicAi('What practical interventions can reduce infrastructure project delays and cost overruns in India?')" style="background: #e0f2fe; color: #0369a1; padding: 6px 14px; border-radius: 999px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid #bae6fd;">Policy Interventions</span>
+                        <span class="public-suggestion-chip" onclick="askPublicAi('Which sectors have the highest expenditure gap and delay probability?')" style="background: #e0f2fe; color: #0369a1; padding: 6px 14px; border-radius: 999px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid #bae6fd;">Sector Delay Probability</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         PROJECT DETAIL MODAL (PUBLIC DASHBOARD)
+    ========================================================= -->
+    <div id="dashModalOverlay" class="modal-overlay hidden" style="position:fixed; inset:0; background:rgba(15,23,42,0.78); backdrop-filter:blur(5px); display:flex; align-items:flex-start; justify-content:center; z-index:9999; padding:24px 16px; overflow-y:auto;">
+        <div class="modal" style="background:#ffffff; width:100%; max-width:1250px; border-radius:16px; box-shadow:0 25px 60px -12px rgba(0,0,0,0.35); padding:28px; margin:20px auto; position:relative; border:1px solid #e2e8f0;">
+            
+            <!-- MODAL HEADER -->
+            <div class="modal-header" style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:16px; padding-bottom:16px; border-bottom:1px solid #e2e8f0;">
+                <div style="flex:1;">
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px; flex-wrap:wrap;">
+                        <h2 id="dashModalProjectName" style="color:#0f172a; font-size:22px; font-weight:800; line-height:1.3; margin:0;">Project</h2>
+                        <span id="dashModalRiskBadge" style="background:#dc2626; color:white; padding:3px 10px; border-radius:999px; font-size:11px; font-weight:700;">High Risk</span>
+                    </div>
+                    <p id="dashModalProjectId" style="color:#64748b; font-size:13px; margin:0 0 10px 0;">—</p>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                        <a id="dashModalDeepLink" href="#" target="_blank" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px; background:#0f172a; color:white; padding:8px 14px; border-radius:8px; font-size:13px; font-weight:600;">
+                            ↗ Open in Project Monitoring
+                        </a>
+                        <button id="dashModalPdfBtn" type="button" onclick="downloadDashboardPdf()" style="display:inline-flex; align-items:center; gap:6px; background:#1e3a8a; color:white; border:none; padding:8px 14px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;">
+                            📄 Export PDF Report
+                        </button>
+                    </div>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <button id="dashModalAiToggleBtn" type="button" onclick="switchDashModalTab('ai')" style="
+                        display:flex; align-items:center; gap:8px;
+                        background:linear-gradient(135deg, #0ea5e9, #0369a1);
+                        color:white; border:none; border-radius:8px;
+                        padding:9px 18px; font-size:14px; font-weight:700;
+                        cursor:pointer; white-space:nowrap; box-shadow:0 2px 10px rgba(14, 165, 233, 0.3);
+                    ">
+                        🤖 Ask AI Assistant
+                    </button>
+                    <button id="dashCloseModal" type="button" onclick="closeDashboardProjectModal()" style="font-size:24px; cursor:pointer; border:none; background:#f1f5f9; border-radius:8px; width:38px; height:38px; display:flex; align-items:center; justify-content:center; color:#475569; font-weight:700;">
+                        ×
+                    </button>
+                </div>
+            </div>
+
+            <!-- MODAL TAB NAVIGATION -->
+            <div style="display:flex; gap:8px; border-bottom:2px solid #e2e8f0; margin-bottom:22px; padding-bottom:2px;">
+                <button id="dashTabBtnOverview" type="button" onclick="switchDashModalTab('overview')" style="background:none; border:none; padding:10px 18px; font-size:14px; font-weight:700; color:#0284c7; border-bottom:3px solid #0284c7; cursor:pointer; transition:all 0.15s ease;">
+                    📊 Overview &amp; Telemetry
+                </button>
+                <button id="dashTabBtnAi" type="button" onclick="switchDashModalTab('ai')" style="background:none; border:none; padding:10px 18px; font-size:14px; font-weight:700; color:#64748b; border-bottom:3px solid transparent; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all 0.15s ease;">
+                    <span>🤖 AI Intelligence Assistant</span>
+                    <span style="background:#e0f2fe; color:#0284c7; font-size:10px; font-weight:800; padding:2px 7px; border-radius:999px;">Interactive</span>
+                </button>
+                <button id="dashTabBtnChart" type="button" onclick="switchDashModalTab('chart')" style="background:none; border:none; padding:10px 18px; font-size:14px; font-weight:700; color:#64748b; border-bottom:3px solid transparent; cursor:pointer; transition:all 0.15s ease;">
+                    📈 Trajectory &amp; ML Trends
+                </button>
+            </div>
+
+            <!-- TAB 1: OVERVIEW & TELEMETRY -->
+            <div id="dashTabContentOverview" style="display:block;">
+                <!-- PROJECT METRICS GRID -->
+                <div id="dashModalDetails" class="details-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:14px; margin-bottom:20px;"></div>
+
+                <!-- ML TRAJECTORY RISK PANEL -->
+                <div class="ml-panel" style="background:linear-gradient(135deg, #f0fdf4, #ecfdf5); border:1px solid #bbf7d0; border-radius:12px; padding:18px 20px; margin-bottom:20px;">
+                    <div class="ml-panel-title" style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-weight:700; color:#1e293b; font-size:14px;">ML Trajectory &amp; Risk Intelligence</span>
+                        <span id="dashModalMLRisk" class="ml-risk-value" style="font-weight:800; font-size:15px;">—</span>
+                    </div>
+                    <div class="risk-bar" style="margin:10px 0; height:10px; background:#e2e8f0; border-radius:999px; overflow:hidden;">
+                        <div id="dashModalMLRiskBar" class="risk-bar-fill" style="height:100%; border-radius:999px; transition:width 0.4s ease;"></div>
+                    </div>
+                    <p id="dashModalMLDesc" class="ml-description" style="font-size:12px; color:#64748b; margin:0; line-height:1.4;">
+                        Probability signal for trajectory deterioration and schedule/cost variance based on TriNetra ML models.
+                    </p>
+                </div>
+
+                <!-- RISK DRIVERS BOX -->
+                <div id="dashModalDrivers" class="drivers-box" style="background:#fffbeb; border:1px solid #fef3c7; border-radius:12px; padding:16px 20px; margin-bottom:20px;"></div>
+
+                <!-- AI JUMP BANNER -->
+                <div onclick="switchDashModalTab('ai')" style="cursor:pointer; background:linear-gradient(135deg, #f0f9ff, #e0f2fe); border:1.5px dashed #0284c7; border-radius:12px; padding:16px 20px; display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; transition:transform 0.15s ease;" onmouseenter="this.style.transform='translateY(-2px)'" onmouseleave="this.style.transform='none'">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <span style="background:#0284c7; color:white; width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px;">🤖</span>
+                        <div>
+                            <strong style="color:#0369a1; font-size:14px;">Have questions about this project's cost overruns or delay causes?</strong>
+                            <p style="margin:2px 0 0 0; font-size:12px; color:#0284c7;">Click here to consult the TriNetra AI Assistant with full context on this project.</p>
+                        </div>
+                    </div>
+                    <button type="button" style="background:#0284c7; color:white; border:none; padding:8px 16px; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer;">
+                        Ask AI Assistant ↗
+                    </button>
+                </div>
+
+                <!-- MINI TRAJECTORY PREVIEW -->
+                <div class="trajectory-chart-container" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:18px 20px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <div style="font-size:14px; font-weight:700; color:#1e293b;">Historical Execution Trajectory (Progress % &amp; Expenditure Gap)</div>
+                        <button type="button" onclick="switchDashModalTab('chart')" style="background:none; border:none; color:#0284c7; font-size:12px; font-weight:700; cursor:pointer;">View Full Analysis ↗</button>
+                    </div>
+                    <div style="height:260px; position:relative;">
+                        <canvas id="dashTrajectoryChartOverview"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: AI INTELLIGENCE ASSISTANT -->
+            <div id="dashTabContentAi" style="display:none;">
+                <div id="dashAiChatbotPanel" class="ai-panel" style="margin-top:0; border:1.5px solid #0284c7; border-radius:14px; overflow:hidden; background:white; box-shadow:0 4px 20px rgba(2, 132, 199, 0.1);">
+                    <div class="ai-panel-header" style="background:linear-gradient(135deg, #0284c7, #0369a1); padding:16px 20px; display:flex; align-items:center; justify-content:space-between;">
+                        <div style="display:flex; align-items:center; gap:10px; color:white;">
+                            <span class="ai-badge" style="background:rgba(255,255,255,0.25); border-radius:6px; padding:3px 9px; font-size:12px; font-weight:800;">AI 🤖</span>
+                            <div>
+                                <span style="font-weight:800; font-size:15px; color:white;">TriNetra Intelligence Assistant</span>
+                                <div style="font-size:11px; color:#e0f2fe; margin-top:2px;">Specialized in infrastructure risk analysis, cost escalation, &amp; delay interventions</div>
+                            </div>
+                        </div>
+                        <span style="background:rgba(255,255,255,0.2); color:white; border-radius:6px; padding:4px 10px; font-size:11px; font-weight:700;">⚡ Active Context</span>
+                    </div>
+                    <div style="background:#f0f9ff; padding:10px 18px; font-size:13px; color:#0369a1; border-bottom:1px solid #e0f2fe;">
+                        Ask anything about this project — risk factors, root causes of cost escalation, schedule outlook, or recommended interventions.
+                    </div>
+                    <div class="ai-messages" id="dashAiMessages" style="height:320px; overflow-y:auto; padding:18px; background:#f8fafc; display:flex; flex-direction:column; gap:12px;">
+                        <div class="ai-message ai-message--bot" style="background:#ffffff; border:1px solid #e2e8f0; padding:12px 16px; border-radius:12px; font-size:13px; color:#1e293b; max-width:85%; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+                            👋 <strong>Hello!</strong> I have full analytical context on this project — including its financial numbers, risk scores, trajectory history, and AI model predictions. Ask me anything below.
+                        </div>
+                    </div>
+                    <div style="padding:14px 18px; border-top:1px solid #e0f2fe; background:white;">
+                        <div class="ai-input-row" style="display:flex; gap:10px; margin-bottom:10px; padding:0; border:none;">
+                            <input type="text" id="dashAiQuestionInput" class="ai-input" placeholder="e.g. Why is this project delayed? What interventions would help?" autocomplete="off" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();askDashAi();}" style="flex:1; padding:11px 16px; border:1.5px solid #cbd5e1; border-radius:8px; font-size:14px; outline:none; background:#f8fafc;" onfocus="this.style.borderColor='#0284c7'; this.style.background='#ffffff';" onblur="this.style.borderColor='#cbd5e1';"/>
+                            <button id="dashAiSendBtn" class="ai-send-btn" type="button" onclick="askDashAi()" style="background:#0284c7; color:white; border:none; border-radius:8px; padding:11px 22px; font-weight:700; cursor:pointer;">Ask</button>
+                        </div>
+                        <div class="ai-suggestions" style="display:flex; flex-wrap:wrap; gap:8px; padding:4px 0 0 0; border:none;">
+                            <span class="dash-suggestion-chip" onclick="askDashAi('Summarize the key risks for this project.')" style="background:#e0f2fe; color:#0369a1; padding:6px 14px; border-radius:999px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid #bae6fd;">Summarize risks</span>
+                            <span class="dash-suggestion-chip" onclick="askDashAi('What interventions would improve this project\'s trajectory?')" style="background:#e0f2fe; color:#0369a1; padding:6px 14px; border-radius:999px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid #bae6fd;">Suggest interventions</span>
+                            <span class="dash-suggestion-chip" onclick="askDashAi('Explain the cost escalation and overrun for this project.')" style="background:#e0f2fe; color:#0369a1; padding:6px 14px; border-radius:999px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid #bae6fd;">Explain cost escalation</span>
+                            <span class="dash-suggestion-chip" onclick="askDashAi('What is the likelihood of further delays and schedule slippage?')" style="background:#e0f2fe; color:#0369a1; padding:6px 14px; border-radius:999px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid #bae6fd;">Delay outlook</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: TRAJECTORY & TRENDS -->
+            <div id="dashTabContentChart" style="display:none;">
+                <div class="trajectory-chart-container" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:20px; margin-bottom:20px;">
+                    <div style="font-size:15px; font-weight:700; color:#1e293b; margin-bottom:14px;">Historical Execution Trajectory (Progress % &amp; Expenditure Gap)</div>
+                    <div style="height:340px; position:relative;">
+                        <canvas id="dashTrajectoryChartDedicated"></canvas>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -461,23 +654,42 @@
                         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "right" } } }
                     });
 
-                    // Top Delayed Table
+                    // Top Delayed Table (Interactive & Clickable)
                     const tbody = document.getElementById("delayedTableBody");
                     tbody.innerHTML = "";
-                    const riskColor = { High: "#fef2f2", Medium: "#fff7ed", Low: "#f0fdf4" };
                     const riskBadge = { High: "#dc2626", Medium: "#ea580c", Low: "#16a34a" };
                     (data.top_delayed || []).forEach(p => {
                         const tr = document.createElement("tr");
-                        tr.style.borderBottom = "1px solid #f1f5f9";
+                        tr.style.borderBottom = "1px solid #e2e8f0";
+                        tr.style.cursor = "pointer";
+                        tr.style.transition = "background-color 0.15s ease";
+                        tr.title = `Click to inspect full details for: ${p.project_name}`;
+                        tr.onmouseenter = () => { tr.style.backgroundColor = "#f8fafc"; };
+                        tr.onmouseleave = () => { tr.style.backgroundColor = ""; };
+                        tr.onclick = () => openDashboardProjectModal(p.project_id, false);
+
                         tr.innerHTML = `
-                            <td style="padding:9px 8px; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${p.project_name}">${p.project_name}</td>
-                            <td style="padding:9px 8px; color:#475569;">${p.sector}</td>
-                            <td style="padding:9px 8px; text-align:right;">${fmt(p.original_cost_cr)}</td>
-                            <td style="padding:9px 8px; text-align:right;">${fmt(p.revised_cost_cr)}</td>
-                            <td style="padding:9px 8px; text-align:right; font-weight:700; color:#dc2626;">+${p.cost_escalation_pct}%</td>
-                            <td style="padding:9px 8px; text-align:right;">${p.physical_progress_pct}%</td>
-                            <td style="padding:9px 8px; text-align:center;">
-                                <span style="background:${riskBadge[p.risk_level] || '#64748b'}; color:white; padding:2px 10px; border-radius:999px; font-size:11px; font-weight:700;">${p.risk_level}</span>
+                            <td style="padding:10px 10px; max-width:280px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600; color:#0f172a;" title="${escapeHtml(p.project_name)}">
+                                <span style="display:inline-flex; align-items:center; gap:6px;">
+                                    <span style="color:#0ea5e9; font-size:13px;">↗</span>
+                                    ${escapeHtml(p.project_name)}
+                                </span>
+                            </td>
+                            <td style="padding:10px 10px; color:#475569;">${escapeHtml(p.sector)}</td>
+                            <td style="padding:10px 10px; text-align:right;">₹${fmt(p.original_cost_cr)}</td>
+                            <td style="padding:10px 10px; text-align:right;">₹${fmt(p.revised_cost_cr)}</td>
+                            <td style="padding:10px 10px; text-align:right; font-weight:700; color:#dc2626;">+${p.cost_escalation_pct}%</td>
+                            <td style="padding:10px 10px; text-align:right; font-weight:600; color:#0284c7;">${p.physical_progress_pct}%</td>
+                            <td style="padding:10px 10px; text-align:center;">
+                                <span style="background:${riskBadge[p.risk_level] || '#64748b'}; color:white; padding:3px 12px; border-radius:999px; font-size:11px; font-weight:700;">${p.risk_level}</span>
+                            </td>
+                            <td style="padding:10px 10px; text-align:center; white-space:nowrap;">
+                                <button type="button" style="background:#0f172a; color:white; border:none; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; margin-right:6px;" onclick="event.stopPropagation(); openDashboardProjectModal(${p.project_id}, false);">
+                                    Details ↗
+                                </button>
+                                <button type="button" style="background:linear-gradient(135deg, #0ea5e9, #0284c7); color:white; border:none; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; box-shadow:0 1px 4px rgba(14,165,233,0.3);" onclick="event.stopPropagation(); openDashboardProjectModal(${p.project_id}, true);">
+                                    Ask AI 🤖
+                                </button>
                             </td>`;
                         tbody.appendChild(tr);
                     });
@@ -485,6 +697,570 @@
         }
 
         document.getElementById("btnShowData").addEventListener("click", loadDashboardData);
+
+        // ============================================================
+        // DASHBOARD PROJECT MODAL SYSTEM WITH TABS
+        // ============================================================
+        let currentDashProjectId = null;
+        let currentDashProject = null;
+        let dashTrajectoryChartInstOverview = null;
+        let dashTrajectoryChartInstDedicated = null;
+
+        function escapeHtml(str) {
+            if (str == null) return "";
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function switchDashModalTab(tabName) {
+            const btnOverview = document.getElementById("dashTabBtnOverview");
+            const btnAi = document.getElementById("dashTabBtnAi");
+            const btnChart = document.getElementById("dashTabBtnChart");
+            const secOverview = document.getElementById("dashTabContentOverview");
+            const secAi = document.getElementById("dashTabContentAi");
+            const secChart = document.getElementById("dashTabContentChart");
+
+            const tabs = [
+                { name: "overview", btn: btnOverview, sec: secOverview },
+                { name: "ai", btn: btnAi, sec: secAi },
+                { name: "chart", btn: btnChart, sec: secChart }
+            ];
+
+            tabs.forEach(t => {
+                if (!t.btn || !t.sec) return;
+                if (t.name === tabName) {
+                    t.btn.style.color = "#0284c7";
+                    t.btn.style.borderBottomColor = "#0284c7";
+                    t.sec.style.display = "block";
+                } else {
+                    t.btn.style.color = "#64748b";
+                    t.btn.style.borderBottomColor = "transparent";
+                    t.sec.style.display = "none";
+                }
+            });
+
+            if (tabName === "ai") {
+                setTimeout(() => {
+                    const inp = document.getElementById("dashAiQuestionInput");
+                    if (inp) {
+                        inp.focus();
+                    }
+                }, 150);
+            } else if (tabName === "chart" && currentDashProjectId) {
+                setTimeout(() => {
+                    loadDashTrajectory(currentDashProjectId);
+                }, 100);
+            } else if (tabName === "overview" && currentDashProjectId) {
+                setTimeout(() => {
+                    loadDashTrajectory(currentDashProjectId);
+                }, 100);
+            }
+        }
+
+        async function openDashboardProjectModal(projectId, openAi = false) {
+            if (!projectId) return;
+            currentDashProjectId = projectId;
+            currentDashProject = { project_id: projectId };
+
+            const overlay = document.getElementById("dashModalOverlay");
+            if (!overlay) return;
+            overlay.classList.remove("hidden");
+            document.body.style.overflow = "hidden"; // lock background scroll
+            overlay.scrollTop = 0;
+
+            // Activate initial tab
+            switchDashModalTab(openAi ? 'ai' : 'overview');
+
+            // Initial loading state
+            document.getElementById("dashModalProjectName").innerText = "Loading project details...";
+            document.getElementById("dashModalProjectId").innerText = `Project ID: ${projectId}`;
+            document.getElementById("dashModalDetails").innerHTML = `<div style="grid-column: 1 / -1; padding: 24px; text-align: center; color: #64748b;">⏳ Fetching telemetry and AI intelligence...</div>`;
+            document.getElementById("dashModalDrivers").innerHTML = "";
+            resetDashAiChat();
+
+            try {
+                const res = await fetch(`/api/projects/${encodeURIComponent(projectId)}`);
+                if (!res.ok) throw new Error("Failed to load project details");
+                const p = await res.json();
+                currentDashProject = p;
+
+                // Header
+                document.getElementById("dashModalProjectName").innerText = p.project_name || "Project";
+                document.getElementById("dashModalProjectId").innerHTML = `
+                    <strong>Project ID:</strong> ${p.project_id} &nbsp;|&nbsp; 
+                    <strong>Agency:</strong> ${escapeHtml(p.agency || "—")} &nbsp;|&nbsp; 
+                    <strong>Sector:</strong> ${escapeHtml(p.sector || "—")} &nbsp;|&nbsp; 
+                    <strong>State:</strong> ${escapeHtml(p.state || "—")}
+                `;
+
+                // Risk Badge in header
+                const riskBadgeEl = document.getElementById("dashModalRiskBadge");
+                const riskColors = { High: "#dc2626", Medium: "#ea580c", Low: "#16a34a" };
+                if (riskBadgeEl) {
+                    const rLevel = p.risk_level || "Medium";
+                    riskBadgeEl.innerText = `${rLevel} Risk`;
+                    riskBadgeEl.style.background = riskColors[rLevel] || "#dc2626";
+                }
+
+                // Link to Project Monitoring page with auto-open parameter
+                const deepLink = document.getElementById("dashModalDeepLink");
+                if (deepLink) {
+                    deepLink.href = `/projects?id=${encodeURIComponent(p.project_id)}`;
+                }
+
+                // Details grid
+                const detailsGrid = document.getElementById("dashModalDetails");
+                detailsGrid.innerHTML = `
+                    <div class="detail-card" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px 14px; display:flex; flex-direction:column; gap:4px;">
+                        <span style="font-size:11px; text-transform:uppercase; color:#64748b; font-weight:600;">Agency</span>
+                        <strong style="font-size:14px; color:#0f172a;">${escapeHtml(p.agency || "—")}</strong>
+                    </div>
+                    <div class="detail-card" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px 14px; display:flex; flex-direction:column; gap:4px;">
+                        <span style="font-size:11px; text-transform:uppercase; color:#64748b; font-weight:600;">Line Ministry</span>
+                        <strong style="font-size:14px; color:#0f172a;">${escapeHtml(p.line_ministry || "—")}</strong>
+                    </div>
+                    <div class="detail-card" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px 14px; display:flex; flex-direction:column; gap:4px;">
+                        <span style="font-size:11px; text-transform:uppercase; color:#64748b; font-weight:600;">Sector</span>
+                        <strong style="font-size:14px; color:#0f172a;">${escapeHtml(p.sector || "—")}</strong>
+                    </div>
+                    <div class="detail-card" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px 14px; display:flex; flex-direction:column; gap:4px;">
+                        <span style="font-size:11px; text-transform:uppercase; color:#64748b; font-weight:600;">State</span>
+                        <strong style="font-size:14px; color:#0f172a;">${escapeHtml(p.state || "—")}</strong>
+                    </div>
+                    <div class="detail-card" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px 14px; display:flex; flex-direction:column; gap:4px;">
+                        <span style="font-size:11px; text-transform:uppercase; color:#64748b; font-weight:600;">Original Cost</span>
+                        <strong style="font-size:15px; color:#0f172a;">₹${fmt(p.original_cost_cr || 0)} Cr</strong>
+                    </div>
+                    <div class="detail-card" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px 14px; display:flex; flex-direction:column; gap:4px;">
+                        <span style="font-size:11px; text-transform:uppercase; color:#64748b; font-weight:600;">Revised Cost</span>
+                        <strong style="font-size:15px; color:#0f172a;">₹${fmt(p.revised_cost_cr || 0)} Cr</strong>
+                    </div>
+                    <div class="detail-card" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px 14px; display:flex; flex-direction:column; gap:4px;">
+                        <span style="font-size:11px; text-transform:uppercase; color:#64748b; font-weight:600;">Cumulative Expenditure</span>
+                        <strong style="font-size:15px; color:#0f172a;">₹${fmt(p.expenditure_cr || 0)} Cr</strong>
+                    </div>
+                    <div class="detail-card" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px 14px; display:flex; flex-direction:column; gap:4px;">
+                        <span style="font-size:11px; text-transform:uppercase; color:#64748b; font-weight:600;">Cost Escalation</span>
+                        <strong style="font-size:15px; color:${(p.cost_escalation_pct || 0) > 0 ? '#dc2626' : '#16a34a'};">
+                            +${(p.cost_escalation_pct || 0).toFixed(1)}%
+                        </strong>
+                    </div>
+                    <div class="detail-card" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px 14px; display:flex; flex-direction:column; gap:4px;">
+                        <span style="font-size:11px; text-transform:uppercase; color:#64748b; font-weight:600;">Physical Progress</span>
+                        <strong style="font-size:15px; color:#0284c7;">${(p.physical_progress_pct || 0).toFixed(1)}%</strong>
+                    </div>
+                    <div class="detail-card" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px 14px; display:flex; flex-direction:column; gap:4px;">
+                        <span style="font-size:11px; text-transform:uppercase; color:#64748b; font-weight:600;">Expenditure Gap</span>
+                        <strong style="font-size:15px; color:#0f172a;">${(p.expenditure_progress_gap || 0).toFixed(1)} pp</strong>
+                    </div>
+                    <div class="detail-card" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px 14px; display:flex; flex-direction:column; gap:4px;">
+                        <span style="font-size:11px; text-transform:uppercase; color:#64748b; font-weight:600;">Schedule Delay</span>
+                        <strong style="font-size:15px; color:${(p.predicted_time_overrun_months || 0) > 0 ? '#ea580c' : '#16a34a'};">
+                            ${(p.predicted_time_overrun_months || 0) > 0 ? '+' : ''}${(p.predicted_time_overrun_months || 0).toFixed(1)} mos
+                        </strong>
+                    </div>
+                    <div class="detail-card" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px 14px; display:flex; flex-direction:column; gap:4px;">
+                        <span style="font-size:11px; text-transform:uppercase; color:#64748b; font-weight:600;">Trajectory Status</span>
+                        <strong style="font-size:15px; color:#0f172a;">${escapeHtml(p.trajectory || "Stable")}</strong>
+                    </div>
+                `;
+
+                // ML Panel
+                const riskLevel = p.risk_level || "Low";
+                const riskScore = (p.overall_risk_score || 0).toFixed(1);
+                const riskBarEl = document.getElementById("dashModalMLRiskBar");
+                const riskValEl = document.getElementById("dashModalMLRisk");
+                riskValEl.innerHTML = `<span style="color:${riskColors[riskLevel] || '#16a34a'}; font-weight:800;">${riskLevel} Risk (${riskScore}/100)</span>`;
+                if (riskBarEl) {
+                    riskBarEl.style.width = `${Math.min(100, Math.max(5, p.overall_risk_score || 10))}%`;
+                    riskBarEl.style.background = riskColors[riskLevel] || "#16a34a";
+                }
+
+                const overrunCr = p.predicted_cost_overrun_cr;
+                const overrunTxt = overrunCr != null ? (overrunCr > 0 ? `+₹${fmt(overrunCr)} Cr` : `-₹${fmt(Math.abs(overrunCr))} Cr`) : "—";
+                document.getElementById("dashModalMLDesc").innerText = 
+                    `Deterioration Probability: ${((p.ml_deterioration_probability || 0) * 100).toFixed(1)}% | Predicted Cost Overrun: ${overrunTxt} | Predicted Schedule Overrun: +${(p.predicted_time_overrun_months || 0).toFixed(1)} months.`;
+
+                // Risk Drivers
+                const driversEl = document.getElementById("dashModalDrivers");
+                const driversList = (p.key_risk_drivers || "Low variance; normal progress trajectory").split(",").map(d => d.trim()).filter(Boolean);
+                driversEl.innerHTML = `
+                    <h4 style="margin:0 0 8px 0; color:#92400e; font-size:14px; font-weight:700;">Key Risk Drivers &amp; Factors Flagged:</h4>
+                    <ul style="margin:0; padding-left:20px; font-size:13px; color:#78350f;">
+                        ${driversList.map(d => `<li style="margin-bottom:4px;">${escapeHtml(d)}</li>`).join("")}
+                    </ul>
+                `;
+
+                // Load Trajectory
+                loadDashTrajectory(p.project_id);
+
+                // Reset AI Assistant
+                resetDashAiChat();
+
+                if (openAi) {
+                    setTimeout(() => {
+                        document.getElementById("dashAiQuestionInput")?.focus();
+                    }, 200);
+                }
+
+            } catch (err) {
+                console.error("Failed to load project details:", err);
+                document.getElementById("dashModalDetails").innerHTML = `<div style="grid-column: 1 / -1; padding: 24px; color: #dc2626; text-align: center;">Failed to load project details. Please try again.</div>`;
+            }
+        }
+
+        function closeDashboardProjectModal() {
+            const overlay = document.getElementById("dashModalOverlay");
+            if (overlay) overlay.classList.add("hidden");
+            document.body.style.overflow = "";
+            if (dashTrajectoryChartInstOverview) {
+                dashTrajectoryChartInstOverview.destroy();
+                dashTrajectoryChartInstOverview = null;
+            }
+            if (dashTrajectoryChartInstDedicated) {
+                dashTrajectoryChartInstDedicated.destroy();
+                dashTrajectoryChartInstDedicated = null;
+            }
+        }
+
+        async function loadDashTrajectory(projectId) {
+            const canvasOverview = document.getElementById("dashTrajectoryChartOverview");
+            const canvasDedicated = document.getElementById("dashTrajectoryChartDedicated");
+
+            if (dashTrajectoryChartInstOverview) {
+                dashTrajectoryChartInstOverview.destroy();
+                dashTrajectoryChartInstOverview = null;
+            }
+            if (dashTrajectoryChartInstDedicated) {
+                dashTrajectoryChartInstDedicated.destroy();
+                dashTrajectoryChartInstDedicated = null;
+            }
+
+            try {
+                const res = await fetch(`/api/projects/${encodeURIComponent(projectId)}/trajectory`);
+                if (!res.ok) return;
+                const rows = await res.json();
+                if (!Array.isArray(rows) || rows.length === 0) return;
+
+                const labels = rows.map(r => r.report_month ? r.report_month.slice(0, 7) : "");
+                const progressData = rows.map(r => Number(r.physical_progress_pct || 0));
+                const gapData = rows.map(r => Number(r.expenditure_progress_gap || 0));
+
+                const chartConfig = {
+                    type: "line",
+                    data: {
+                        labels,
+                        datasets: [
+                            {
+                                label: "Physical Progress %",
+                                data: progressData,
+                                tension: 0.35,
+                                borderColor: "#16a34a",
+                                backgroundColor: "rgba(22, 163, 74, 0.08)",
+                                borderWidth: 2.5,
+                                pointRadius: 4,
+                                pointBackgroundColor: "#16a34a",
+                                fill: true
+                            },
+                            {
+                                label: "Expenditure-Progress Gap (pp)",
+                                data: gapData,
+                                tension: 0.35,
+                                borderColor: "#ea580c",
+                                backgroundColor: "rgba(234, 88, 12, 0.08)",
+                                borderWidth: 2.5,
+                                pointRadius: 4,
+                                pointBackgroundColor: "#ea580c",
+                                fill: true
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: "top" }
+                        },
+                        scales: {
+                            y: { beginAtZero: true }
+                        }
+                    }
+                };
+
+                if (canvasOverview) {
+                    dashTrajectoryChartInstOverview = new Chart(canvasOverview, JSON.parse(JSON.stringify(chartConfig)));
+                }
+                if (canvasDedicated) {
+                    dashTrajectoryChartInstDedicated = new Chart(canvasDedicated, JSON.parse(JSON.stringify(chartConfig)));
+                }
+            } catch (e) {
+                console.warn("Could not load trajectory chart:", e);
+            }
+        }
+
+        async function downloadDashboardPdf() {
+            if (!currentDashProject || !currentDashProject.project_id) return;
+            const btn = document.getElementById("dashModalPdfBtn");
+            const origText = btn.innerHTML;
+            btn.innerHTML = "⏳ Generating PDF...";
+            btn.disabled = true;
+
+            try {
+                const pid = currentDashProject.project_id;
+                const res = await fetch(`/api/projects/${encodeURIComponent(pid)}/report/pdf`);
+                if (!res.ok) throw new Error("HTTP error " + res.status);
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.style.display = "none";
+                a.href = url;
+                a.download = `TriNetra_Project_${pid}_Analysis.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                }, 300);
+            } catch (err) {
+                console.error("PDF download failed:", err);
+                window.location.href = `/api/projects/${encodeURIComponent(currentDashProject.project_id)}/report/pdf`;
+            } finally {
+                btn.innerHTML = origText;
+                btn.disabled = false;
+            }
+        }
+
+        function resetDashAiChat() {
+            const msgs = document.getElementById("dashAiMessages");
+            if (msgs) {
+                msgs.innerHTML = `
+                    <div class="ai-message ai-message--bot" style="background:#ffffff; border:1px solid #e2e8f0; padding:12px 16px; border-radius:12px; font-size:13px; color:#1e293b; max-width:85%; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+                        👋 <strong>Hello!</strong> I have full analytical context on this project — including its financial numbers, risk scores, trajectory history, and AI model predictions. Ask me anything below.
+                    </div>`;
+            }
+        }
+
+        async function askDashAi(question) {
+            if (!question || typeof question !== "string") {
+                question = document.getElementById("dashAiQuestionInput")?.value || "";
+            }
+            question = question.trim();
+            if (!question) return;
+
+            const pid = currentDashProjectId || (currentDashProject && currentDashProject.project_id);
+            if (!pid) {
+                console.warn("No active project ID for AI chat");
+                return;
+            }
+
+            const btn = document.getElementById("dashAiSendBtn");
+            const inp = document.getElementById("dashAiQuestionInput");
+            const msgs = document.getElementById("dashAiMessages");
+            if (btn) btn.disabled = true;
+            if (inp) inp.value = "";
+
+            // Append user message
+            const userDiv = document.createElement("div");
+            userDiv.style.cssText = "align-self:flex-end; background:#0284c7; color:white; padding:10px 16px; border-radius:12px; font-size:13px; max-width:85%; line-height:1.4;";
+            userDiv.innerText = question;
+            msgs.appendChild(userDiv);
+
+            // Append typing indicator
+            const typing = document.createElement("div");
+            typing.id = "dashAiTypingIndicator";
+            typing.style.cssText = "align-self:flex-start; background:#f1f5f9; color:#64748b; padding:8px 14px; border-radius:10px; font-size:12px; display:flex; align-items:center; gap:6px;";
+            typing.innerHTML = `<span style="display:inline-block; width:6px; height:6px; background:#0284c7; border-radius:50%;"></span> Thinking with project context...`;
+            msgs.appendChild(typing);
+            msgs.scrollTop = msgs.scrollHeight;
+
+            try {
+                const res = await fetch("/api/assistant", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        project_id: pid,
+                        question: question
+                    })
+                });
+                const typingEl = document.getElementById("dashAiTypingIndicator");
+                if (typingEl) typingEl.remove();
+
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    const errDiv = document.createElement("div");
+                    errDiv.style.cssText = "align-self:flex-start; background:#fee2e2; color:#dc2626; padding:10px 14px; border-radius:10px; font-size:13px;";
+                    errDiv.innerText = err.detail || "Error communicating with AI assistant.";
+                    msgs.appendChild(errDiv);
+                } else {
+                    const data = await res.json();
+                    const botDiv = document.createElement("div");
+                    botDiv.style.cssText = "align-self:flex-start; background:#ffffff; color:#0f172a; padding:14px 16px; border-radius:12px; font-size:13px; max-width:85%; line-height:1.5; border:1px solid #e2e8f0; box-shadow:0 1px 3px rgba(0,0,0,0.05);";
+                    
+                    let safe = escapeHtml(data.answer || "");
+                    safe = safe.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                    safe = safe.replace(/\*(.*?)\*/g, '<em>$1</em>');
+                    safe = safe.replace(/\n/g, '<br>');
+
+                    let backendLabel = "AI Assistant";
+                    if (data.backend && data.backend.startsWith("groq")) {
+                        const model = data.backend.split(":")[1] || "Llama 3";
+                        backendLabel = `⚡ Groq (${model.replace("llama-3.3-70b-versatile", "Llama 3.3 70B").replace("llama-3.1-8b-instant", "Llama 3.1 8B").replace("qwen/qwen3.8-27b", "Qwen 2.5 27B")})`;
+                    } else if (data.backend === "gemini") {
+                        backendLabel = "✨ Google Gemini AI";
+                    } else if (data.backend === "ollama") {
+                        backendLabel = "🦙 Ollama (local)";
+                    } else if (data.backend === "analytical_engine") {
+                        backendLabel = "📊 TriNetra Analytical Engine";
+                    }
+
+                    botDiv.innerHTML = `
+                        <div>${safe}</div>
+                        <div style="font-size:11px; color:#64748b; margin-top:8px; border-top:1px solid #f1f5f9; padding-top:4px;">Powered by ${backendLabel}</div>
+                    `;
+                    msgs.appendChild(botDiv);
+                }
+            } catch (e) {
+                const typingEl = document.getElementById("dashAiTypingIndicator");
+                if (typingEl) typingEl.remove();
+                const errDiv = document.createElement("div");
+                errDiv.style.cssText = "align-self:flex-start; background:#fee2e2; color:#dc2626; padding:10px 14px; border-radius:10px; font-size:13px;";
+                errDiv.innerText = "Network error. Please try again.";
+                msgs.appendChild(errDiv);
+            } finally {
+                if (btn) btn.disabled = false;
+                if (inp) inp.focus();
+                msgs.scrollTop = msgs.scrollHeight;
+            }
+        }
+
+        // ============================================================
+        // PUBLIC DASHBOARD AI ADVISOR (PORTFOLIO-WIDE)
+        // ============================================================
+        async function askPublicAi(question) {
+            if (!question || typeof question !== "string") {
+                question = document.getElementById("publicAiQuestionInput")?.value || "";
+            }
+            question = question.trim();
+            if (!question) return;
+
+            const inp = document.getElementById("publicAiQuestionInput");
+            const btn = document.getElementById("publicAiSendBtn");
+            const msgs = document.getElementById("publicAiMessages");
+            if (btn) btn.disabled = true;
+            if (inp) inp.value = "";
+
+            // Append user message
+            const userDiv = document.createElement("div");
+            userDiv.style.cssText = "align-self:flex-end; background:#0284c7; color:white; padding:10px 16px; border-radius:12px; font-size:13px; max-width:85%; line-height:1.4;";
+            userDiv.innerText = question;
+            msgs.appendChild(userDiv);
+
+            // Append typing indicator
+            const typing = document.createElement("div");
+            typing.id = "publicAiTyping";
+            typing.style.cssText = "align-self:flex-start; background:#f1f5f9; color:#64748b; padding:8px 14px; border-radius:10px; font-size:12px; display:flex; align-items:center; gap:6px;";
+            typing.innerHTML = `<span style="display:inline-block; width:6px; height:6px; background:#0284c7; border-radius:50%;"></span> Analyzing national infrastructure portfolio...`;
+            msgs.appendChild(typing);
+            msgs.scrollTop = msgs.scrollHeight;
+
+            try {
+                const res = await fetch("/api/assistant", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ question: question })
+                });
+                const typingEl = document.getElementById("publicAiTyping");
+                if (typingEl) typingEl.remove();
+
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    const errDiv = document.createElement("div");
+                    errDiv.style.cssText = "align-self:flex-start; background:#fee2e2; color:#dc2626; padding:10px 14px; border-radius:10px; font-size:13px;";
+                    errDiv.innerText = err.detail || "Error querying AI advisor.";
+                    msgs.appendChild(errDiv);
+                } else {
+                    const data = await res.json();
+                    const botDiv = document.createElement("div");
+                    botDiv.style.cssText = "align-self:flex-start; background:#ffffff; color:#0f172a; padding:14px 16px; border-radius:12px; font-size:13px; max-width:85%; line-height:1.5; border:1px solid #e2e8f0; box-shadow:0 1px 3px rgba(0,0,0,0.05);";
+
+                    let safe = escapeHtml(data.answer || "");
+                    safe = safe.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                    safe = safe.replace(/\*(.*?)\*/g, '<em>$1</em>');
+                    safe = safe.replace(/\n/g, '<br>');
+
+                    let backendLabel = "AI Assistant";
+                    if (data.backend && data.backend.startsWith("groq")) {
+                        const model = data.backend.split(":")[1] || "Llama 3";
+                        backendLabel = `⚡ Groq (${model.replace("llama-3.3-70b-versatile", "Llama 3.3 70B").replace("llama-3.1-8b-instant", "Llama 3.1 8B").replace("qwen/qwen3.8-27b", "Qwen 2.5 27B")})`;
+                    } else if (data.backend === "gemini") {
+                        backendLabel = "✨ Google Gemini AI";
+                    } else if (data.backend === "analytical_engine") {
+                        backendLabel = "📊 TriNetra Analytical Engine";
+                    }
+
+                    botDiv.innerHTML = `
+                        <div>${safe}</div>
+                        <div style="font-size:11px; color:#64748b; margin-top:8px; border-top:1px solid #f1f5f9; padding-top:4px;">Powered by ${backendLabel}</div>
+                    `;
+                    msgs.appendChild(botDiv);
+                }
+            } catch (e) {
+                const typingEl = document.getElementById("publicAiTyping");
+                if (typingEl) typingEl.remove();
+                const errDiv = document.createElement("div");
+                errDiv.style.cssText = "align-self:flex-start; background:#fee2e2; color:#dc2626; padding:10px 14px; border-radius:10px; font-size:13px;";
+                errDiv.innerText = "Network error. Please try again.";
+                msgs.appendChild(errDiv);
+            } finally {
+                if (btn) btn.disabled = false;
+                if (inp) inp.focus();
+                msgs.scrollTop = msgs.scrollHeight;
+            }
+        }
+
+        // Wire modal event listeners immediately & defensively
+        function initDashModalListeners() {
+            const closeBtn = document.getElementById("dashCloseModal");
+            if (closeBtn) closeBtn.onclick = closeDashboardProjectModal;
+
+            const overlay = document.getElementById("dashModalOverlay");
+            if (overlay) {
+                overlay.onclick = (e) => {
+                    if (e.target === overlay) closeDashboardProjectModal();
+                };
+            }
+
+            document.addEventListener("keydown", (e) => {
+                if (e.key === "Escape") closeDashboardProjectModal();
+            });
+
+            const pdfBtn = document.getElementById("dashModalPdfBtn");
+            if (pdfBtn) pdfBtn.onclick = downloadDashboardPdf;
+
+            const aiToggleBtn = document.getElementById("dashModalAiToggleBtn");
+            if (aiToggleBtn) aiToggleBtn.onclick = () => switchDashModalTab('ai');
+
+            const aiSendBtn = document.getElementById("dashAiSendBtn");
+            const aiInput = document.getElementById("dashAiQuestionInput");
+            if (aiSendBtn && aiInput) {
+                aiSendBtn.onclick = () => askDashAi();
+                aiInput.onkeydown = (e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        askDashAi();
+                    }
+                };
+            }
+        }
+
+        initDashModalListeners();
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", initDashModalListeners);
+        }
 
         // Load initially
         loadDashboardData();

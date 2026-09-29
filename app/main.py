@@ -1933,6 +1933,7 @@ def get_dashboard_data(
     )[:10]
     top_delayed = [
         {
+            "project_id": r["project_id"],
             "project_name": r["project_name"],
             "sector": r["sector"] or "—",
             "state": r["state"] or "—",
@@ -3908,9 +3909,75 @@ def download_project_pdf(project_id: int):
 # AI PROJECT INTELLIGENCE ASSISTANT
 # ============================================================
 
+from typing import Optional
+
 class AssistantRequest(BaseModel):
-    project_id: int
+    project_id: Optional[int] = None
     question: str
+
+
+def _build_portfolio_context() -> str:
+    """Build a rich text context block for portfolio-wide questions."""
+    conn = db()
+    row = conn.execute("""
+        SELECT 
+            COUNT(*) as total_projects,
+            SUM(original_cost_cr) as total_orig,
+            SUM(revised_cost_cr) as total_rev,
+            SUM(expenditure_cr) as total_exp,
+            AVG(cost_escalation_pct) as avg_esc,
+            AVG(physical_progress_pct) as avg_prog
+        FROM projects_latest
+    """).fetchone()
+
+    top10 = conn.execute("""
+        SELECT project_id, project_name, sector, cost_escalation_pct, original_cost_cr, revised_cost_cr, physical_progress_pct, risk_level
+        FROM projects_latest
+        ORDER BY cost_escalation_pct DESC
+        LIMIT 10
+    """).fetchall()
+
+    sectors = conn.execute("""
+        SELECT sector, COUNT(*) as cnt, AVG(cost_escalation_pct) as avg_esc
+        FROM projects_latest
+        GROUP BY sector
+        ORDER BY cnt DESC
+        LIMIT 6
+    """).fetchall()
+    conn.close()
+
+    top_str = "\n".join([
+        f"  - [{r['sector']}] {r['project_name']} (ID: {r['project_id']}): Orig Rs.{r['original_cost_cr']} Cr -> Rev Rs.{r['revised_cost_cr']} Cr (+{r['cost_escalation_pct']:.1f}% escalation), Progress: {r['physical_progress_pct']}%, Risk: {r['risk_level']}"
+        for r in top10
+    ])
+
+    sec_str = "\n".join([
+        f"  - {r['sector']}: {r['cnt']} projects, Avg Escalation: {r['avg_esc']:.1f}%"
+        for r in sectors
+    ])
+
+    total_orig = row['total_orig'] or 0
+    total_rev = row['total_rev'] or 0
+    total_exp = row['total_exp'] or 0
+    avg_esc = row['avg_esc'] or 0
+    avg_prog = row['avg_prog'] or 0
+
+    return (
+        "NATIONAL INFRASTRUCTURE PORTFOLIO OVERVIEW (PAIMANA / MoSPI)\n"
+        "===========================================================\n"
+        f"Total Monitored Projects : {row['total_projects']}\n"
+        f"Total Original Budget    : Rs. {total_orig:,.1f} Cr\n"
+        f"Total Revised Budget     : Rs. {total_rev:,.1f} Cr\n"
+        f"Total Expenditure Spent  : Rs. {total_exp:,.1f} Cr\n"
+        f"Average Cost Escalation  : {avg_esc:.1f}%\n"
+        f"Average Physical Progress: {avg_prog:.1f}%\n\n"
+        "TOP 10 PROJECTS BY COST ESCALATION\n"
+        "-----------------------------------\n"
+        f"{top_str}\n\n"
+        "KEY SECTOR BREAKDOWN & AVERAGE ESCALATIONS\n"
+        "------------------------------------------\n"
+        f"{sec_str}\n"
+    )
 
 
 def _build_project_context(project_id: int) -> str:
@@ -4004,19 +4071,22 @@ SYSTEM_PROMPT = (
     "infrastructure monitoring system (PAIMANA / MoSPI). You help policymakers, project "
     "administrators, and monitoring agencies understand project health, diagnose risks, and "
     "recommend interventions for Central Sector Infrastructure Projects costing Rs.150 crore "
-    "and above. You are given a structured data brief for a specific project. Answer the "
-    "user's question concisely and insightfully. Be specific — reference actual numbers from "
-    "the brief. When relevant, suggest practical policy interventions. Use plain English. "
-    "Do not fabricate data not in the brief. Keep answers under 200 words unless a detailed "
-    "explanation is explicitly requested."
+    "and above. You are given a structured data brief for a specific project or the overall national "
+    "infrastructure portfolio. Answer the user's question concisely and insightfully. Be specific — "
+    "reference actual numbers from the brief. When relevant, suggest practical policy interventions. "
+    "Use plain English. Do not fabricate data not in the brief. Keep answers under 200 words unless "
+    "a detailed explanation is explicitly requested."
 )
 
 
 @app.post("/api/assistant")
 def assistant(req: AssistantRequest):
-    context = _build_project_context(req.project_id)
-    if not context:
-        raise HTTPException(status_code=404, detail="Project not found")
+    if req.project_id:
+        context = _build_project_context(req.project_id)
+        if not context:
+            raise HTTPException(status_code=404, detail="Project not found")
+    else:
+        context = _build_portfolio_context()
 
     def _clean_key(raw_val: str) -> str:
         if not raw_val:

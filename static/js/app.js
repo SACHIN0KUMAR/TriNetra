@@ -4407,6 +4407,17 @@ document.addEventListener(
 
         loadRiskChart();
 
+        // Deep link: Automatically open project if specified in URL query (e.g. /projects?id=705453)
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetProjectId = urlParams.get("id") || urlParams.get("project_id");
+            if (targetProjectId) {
+                openProject(targetProjectId);
+            }
+        } catch (e) {
+            console.warn("Could not parse deep link project ID:", e);
+        }
+
 
         // ----------------------------------------------------
         // SEARCH
